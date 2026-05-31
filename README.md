@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Copa Family
 
-## Getting Started
+Jogo social para famílias e grupos durante a Copa do Mundo — palpites, pontos, ranking e diversão no intervalo.
 
-First, run the development server:
+## Contexto para design e código
+
+| Arquivo | Uso |
+| --- | --- |
+| [PRODUCT.md](./PRODUCT.md) | Público, voz, anti-referências, escopo do MVP |
+| [DESIGN.md](./DESIGN.md) | Tokens, componentes, rotas, anti-patterns (contrato para IA) |
+| [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) | Referência humana do design system |
+| [AGENTS.md](./AGENTS.md) | Instruções para agentes no repositório |
+| [IMPECCABLE.md](./IMPECCABLE.md) | Comandos, prompts prontos e roteiro Impeccable |
+
+Workflow visual: [Impeccable — designing](https://impeccable.style/designing/#start) (Start → Iterate → Polish → Maintain).
+
+## Getting started
 
 ```bash
+cd copa-family
+cp .env.example .env.local   # se existir; configurar Supabase
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Impeccable (design no Cursor)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run design:install   # skill /impeccable no Cursor (Windows-safe)
+```
 
-## Learn More
+Recarregue o Cursor e use `/impeccable` no chat. Prompts prontos para lobby, palpites e ranking: **[IMPECCABLE.md](./IMPECCABLE.md)**.
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Comando | Descrição |
+| --- | --- |
+| `npm run dev` | Servidor de desenvolvimento |
+| `npm run build` | Build de produção |
+| `npm run lint` | ESLint |
+| `npm run design:install` | Instala skill Impeccable em `.cursor/skills/` |
+| `npm run design:check` | Verifica atualização da skill |
+| `npm run design:detect` | Gate anti-slop (41 regras, falha CI) |
+| `npm run design:ci` | lint + detect + build (local, igual ao CI) |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Stack
 
-## Deploy on Vercel
+- Next.js (App Router), TypeScript, Tailwind CSS v4
+- shadcn/ui (Base UI)
+- Supabase
+- Vercel (deploy)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy e teste real
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **[DEPLOY.md](./DEPLOY.md)** — Vercel, envs, smoke test, CI secrets
+- **[TESTE_REAL.md](./TESTE_REAL.md)** — roteiro com família antes de novas features
+
+## Loop do MVP
+
+**criar sala → entrar (link/QR) → lobby → palpites → jogo/intervalo → Copa Pare → resultado → ranking → perfil/medalhas**
+
+| Comando | Descrição |
+| --- | --- |
+| `npm test` | Testes unitários (Vitest) |
+| `npm run test:e2e` | Playwright mobile 390×844 (requer `.env.local`) |
+| `npm run design:ci` | lint + detect + build |
+
+Analytics centralizados em `src/lib/analytics.ts`. Painel dev: `/admin/metricas` com `ENABLE_ADMIN_METRICS=true`.
+
+Rotas: `src/lib/routes.ts`. Issues: Linear (Copa Family MVP).

@@ -1,65 +1,90 @@
-import Image from "next/image";
+import Link from 'next/link'
+import { Camera, Crown, Trophy, Users } from 'lucide-react'
+
+import { OnboardingSteps } from '@/components/onboarding-steps'
+import { Badge } from '@/components/ui/badge'
+import { buttonVariants } from '@/components/ui/button'
+import { routes } from '@/lib/routes'
+import { cn } from '@/lib/utils'
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-6">
+      <div className="flex flex-1 flex-col gap-6">
+        <section className="relative flex flex-col items-center gap-5 rounded-[2rem] border border-border bg-card/90 p-5 text-center shadow-lg shadow-brand-field/10">
+          <div
+            className="pointer-events-none absolute -top-12 right-2 size-28 rounded-full bg-brand-trophy/25 blur-3xl"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -bottom-10 left-2 size-24 rounded-full bg-brand-sky/20 blur-3xl"
+            aria-hidden
+          />
+
+          <Badge variant="match-halftime" className="relative h-7 px-3">
+            <Trophy />
+            Jogo social da Copa
+          </Badge>
+
+          <div className="relative space-y-2">
+            <h1 className="font-heading text-4xl font-black tracking-tight text-foreground">
+              Copa Family
+            </h1>
+            <p className="text-pretty text-base leading-relaxed text-muted-foreground">
+              Sala rápida, palpite antes do jogo e ranking com a família — tudo no celular.
+            </p>
+          </div>
+
+          <div className="relative grid w-full grid-cols-3 gap-2">
+            <div className="rounded-2xl border border-brand-field/20 bg-brand-field/10 p-2.5">
+              <Users className="mx-auto mb-1.5 size-5 text-brand-field" />
+              <p className="text-[11px] font-bold leading-tight">Salas</p>
+            </div>
+            <div className="rounded-2xl border border-brand-party/20 bg-brand-party/10 p-2.5">
+              <Camera className="mx-auto mb-1.5 size-5 text-brand-party" />
+              <p className="text-[11px] font-bold leading-tight">Fotos</p>
+            </div>
+            <div className="rounded-2xl border border-rank-gold/30 bg-rank-gold/15 p-2.5">
+              <Crown className="mx-auto mb-1.5 size-5 text-rank-gold" />
+              <p className="text-[11px] font-bold leading-tight">Ranking</p>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="como-funciona-heading" className="space-y-3">
+          <h2
+            id="como-funciona-heading"
+            className="font-heading text-lg font-bold tracking-tight"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+            Como funciona
+          </h2>
+          <OnboardingSteps />
+        </section>
+      </div>
+
+      <div className="sticky bottom-[env(safe-area-inset-bottom)] z-20 -mx-1 space-y-3 border-t border-border/80 bg-background/95 px-1 pt-3 backdrop-blur-md">
+        <Link
+          href={routes.criarSala}
+          className={cn(
+            buttonVariants({ variant: 'party', size: 'lg' }),
+            'flex min-h-12 w-full items-center justify-center'
+          )}
+        >
+          Criar sala
+        </Link>
+        <Link
+          href={routes.entrar}
+          className={cn(
+            buttonVariants({ variant: 'outline', size: 'lg' }),
+            'flex min-h-12 w-full items-center justify-center bg-card/80'
+          )}
+        >
+          Entrar com código
+        </Link>
+        <p className="text-center text-xs text-muted-foreground">
+          Sem cadastro. Comece em menos de 1 minuto.
+        </p>
+      </div>
+    </main>
+  )
 }
