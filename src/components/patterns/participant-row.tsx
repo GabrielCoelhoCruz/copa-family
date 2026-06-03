@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { truncateDisplayName } from "@/lib/display-text"
 import { cn } from "@/lib/utils"
 
-type ParticipantRole = "owner" | "member"
+type ParticipantRole = "owner" | "co_host" | "member"
 
 type ParticipantRowProps = {
   name: string
@@ -35,7 +35,12 @@ function ParticipantRow({
         className
       )}
     >
-      <Avatar size="lg" className={role === "owner" ? "ring-2 ring-brand-trophy" : undefined}>
+      <Avatar
+        size="lg"
+        className={
+          role === "owner" || role === "co_host" ? "ring-2 ring-brand-trophy" : undefined
+        }
+      >
         {avatarUrl ? <AvatarImage src={avatarUrl} alt="" /> : null}
         <AvatarFallback className="bg-brand-party/15 font-heading font-bold text-brand-party">
           {fallback}
@@ -54,6 +59,12 @@ function ParticipantRow({
             <Badge variant="rank-gold" className="h-5">
               <Shield />
               Dono
+            </Badge>
+          ) : null}
+          {role === "co_host" ? (
+            <Badge variant="points" className="h-5">
+              <Shield />
+              Co-host
             </Badge>
           ) : null}
         </div>

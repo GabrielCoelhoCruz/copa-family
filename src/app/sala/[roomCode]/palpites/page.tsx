@@ -3,10 +3,11 @@ import { Lock, Target } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 import { PredictionForm } from '@/components/prediction-form'
-import { SuccessBanner } from '@/components/success-banner'
+import { RoundResultCard } from '@/components/patterns/round-result-card'
 import { EmptyState } from '@/components/patterns/empty-state'
 import { PredictionCard } from '@/components/patterns/prediction-card'
 import { getRoomContext, getUserPrediction } from '@/features/rooms/queries'
+import { POINTS } from '@/features/points/rules'
 import { buttonVariants } from '@/components/ui/button'
 import { routes } from '@/lib/routes'
 import { getGuestUserId } from '@/lib/session'
@@ -29,7 +30,7 @@ export default async function PalpitesPage({
     notFound()
   }
 
-  const { room, match } = context
+  const { room, match, fixture } = context
   const userId = await getGuestUserId()
 
   if (!userId) {
@@ -51,14 +52,27 @@ export default async function PalpitesPage({
   }
 
   const existing = await getUserPrediction(match.id, userId)
+  const pushRanking =
+    match.status === 'live' ||
+    match.status === 'halftime' ||
+    match.status === 'finished'
 
   if (existing) {
     return (
       <div className="flex flex-col gap-4">
         {enviado ? (
-          <SuccessBanner
+          <RoundResultCard
             title="Palpite salvo"
-            description="Você ganhou +10 pontos nesta partida."
+            description="Pontos creditados nesta partida."
+            points={POINTS.predictionSubmitted}
+            primaryHref={
+              pushRanking ? routes.ranking(room.code) : routes.sala(room.code)
+            }
+            primaryLabel={pushRanking ? 'Ver ranking' : 'Voltar ao jogo'}
+            secondaryHref={
+              pushRanking ? routes.sala(room.code) : routes.palpites(room.code)
+            }
+            secondaryLabel={pushRanking ? 'Voltar ao jogo' : 'Ver palpite'}
           />
         ) : null}
       <PredictionCard
@@ -89,9 +103,20 @@ export default async function PalpitesPage({
 
   if (enviado) {
     return (
-      <SuccessBanner
+      <RoundResultCard
         title="Palpite salvo"
-        description="Você ganhou +10 pontos. Confira o ranking na aba ao lado."
+        description={
+          pushRanking
+            ? 'Confira o ranking na aba ao lado.'
+            : 'Aguarde o jogo começar na aba Jogo.'
+        }
+        points={POINTS.predictionSubmitted}
+        primaryHref={
+          pushRanking ? routes.ranking(room.code) : routes.sala(room.code)
+        }
+        primaryLabel={pushRanking ? 'Ver ranking' : 'Voltar ao jogo'}
+        secondaryHref={routes.palpites(room.code)}
+        secondaryLabel="Ver palpite"
       />
     )
   }
@@ -103,15 +128,15 @@ export default async function PalpitesPage({
         title="Palpites fechados"
         description={
           match.status === 'lobby'
-            ? 'O dono da sala ainda não abriu os palpites. Fique no lobby e aguarde.'
-            : 'O jogo já começou — não dá mais para enviar palpite nesta partida.'
+            ? 'O dono da sala ainda não abriu os palpites. Volte ao jogo e aguarde.'
+            : 'O jogo já começou. Não dá mais para enviar palpite nesta partida.'
         }
         action={
           <Link
             href={routes.sala(room.code)}
             className={cn(buttonVariants({ variant: 'outline' }), 'min-h-11')}
           >
-            Voltar ao lobby
+            Voltar ao jogo
           </Link>
         }
       />
@@ -123,7 +148,7 @@ export default async function PalpitesPage({
       matchId={match.id}
       roomId={room.id}
       roomCode={room.code}
-      userId={userId}
+      fixture={fixture}
     />
   )
 }

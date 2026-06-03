@@ -64,14 +64,43 @@ Não parecer:
 | --- | --- |
 | Login | Convidado: nome + avatar |
 | Partida | Controle manual do anfitrião |
-| API de futebol | Fora do MVP |
+| Calendário Copa (catálogo Supabase) | Sim — vitrine em `/calendario`; sync em `/admin/catalogo` ou API admin; app lê só Supabase |
+| Criar sala a partir de um jogo | Sim — `/criar-sala?fixture=<id>` desde o calendário |
+| Placar ao vivo automático | Fora do MVP — anfitrião controla status e resultado |
 | Cadastro obrigatório | Não |
 | Comentários no feed | Não na V1 |
 | Limite de fotos | 5 por usuário por partida |
 
+## Product decisions (post-MVP)
+
+| Decisão | Escolha production-ready |
+| --- | --- |
+| Sala persistente | Sim — a sala representa o grupo da Copa e acumula histórico/ranking entre jogos |
+| Co-anfitrião | Sim — dono pode promover membro; co-host conduz status, intervalo, resultado e próximo jogo |
+| Host ausente | Membro pode assumir após 10 minutos sem ação do host |
+| Compartilhar placar | Planejado para o perfil como loop social leve, sem virar feed ou chat |
+| Streak | Multiplicador 1.5x no acerto de vencedor a partir do 3º acerto seguido |
+| Copa Pare | Halftime-first: ritual do intervalo por padrão |
+
 ## Core loop
 
 Entrar na sala → palpites → intervalo (Copa Pare) → pontos → ranking → voltar no próximo jogo.
+
+## Two surfaces (information architecture)
+
+| Surface | Route | Job |
+| --- | --- | --- |
+| **Front door** | `/` | Criar sala ou entrar com código. Aquisição, não jogo. |
+| **Game board** | `/sala/[roomCode]` | Onde a família passa 95% do tempo: partida, próxima ação, ranking, progresso. |
+
+A aba inicial da sala deve responder, em ordem:
+
+1. **O que está acontecendo?** — título da partida, status, placar se houver.
+2. **Quem está jogando?** — preview do ranking e participantes.
+3. **O que fazer agora?** — um CTA principal (palpite, Copa Pare, ranking).
+4. **Qual é o meu progresso?** — pontos, posição, medalhas na sala.
+
+Evitar cards de “funcionalidades” (Salas, Medalhas, Família) no topo; preferir **verbos** (Fazer palpite, Ver ranking, Copa Pare).
 
 ## Métricas mínimas
 
@@ -81,7 +110,7 @@ Entrar na sala → palpites → intervalo (Copa Pare) → pontos → ranking →
 
 ## Fora do escopo (agora)
 
-Chat, vídeo, push, IA narradora, prêmios reais, integração com placar ao vivo.
+Chat, vídeo, push, IA narradora, prêmios reais, placar ao vivo automático (sync de status/placar em tempo real).
 
 ## Impeccable loop (como usar neste repo)
 

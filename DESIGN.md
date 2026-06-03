@@ -2,6 +2,8 @@
 
 > Contrato de design para agentes e ferramentas (formato alinhado ao [Impeccable](https://impeccable.style/designing/#start)). Humanos: ver também `DESIGN_SYSTEM.md`.
 
+**Taste Skill (anti-slop landing audit):** status and remaining optional work → [`TASTE-SKILL-AUDIT.md`](./TASTE-SKILL-AUDIT.md) (0 must-fix items as of pass 2).
+
 ## Register
 
 **Product UI.** Fluent density on mobile, semantic match states, repeatable patterns. Users finish a task per screen.
@@ -62,12 +64,32 @@ Definidos em `:root` e `.dark` em `src/app/globals.css`. Use Tailwind theme alia
 
 ## Motion
 
-- `--duration-fast` 140ms, `--duration-base` 220ms
+- `--duration-fast` 140ms, `--duration-base` 220ms, `--duration-slow` 320ms
 - Easing: `--ease-out-strong`, `--ease-in-out-strong`
-- Animate `transform` and `opacity` only on interactive UI
+- Animate `transform` and `opacity` only on interactive UI (Impeccable `/animate`)
 - Respect `prefers-reduced-motion` (global in `globals.css`)
 - No `transition-all` on new complex components
-- Button press: `scale(0.98)`, not `translate-y`
+- Button press: `.cf-pressable` (`scale(0.97)` on `:active`) or `scale(0.98)` on buttons
+
+### Utilities (`globals.css`)
+
+| Class | Uso |
+| --- | --- |
+| `cf-animate-in` | Entrada de card/banner (220ms) |
+| `cf-stagger-children` | Lista com `--cf-i` por item (cap 10) |
+| `cf-live-dot` | Indicador ao vivo em `MatchStatusBadge` |
+| `cf-ball-float` / `cf-trophy-glow` | Decor em `CopaAmbient` |
+| `cf-pressable` | Links/CTAs com feedback de toque |
+| `cf-status-swap` | Troca de status (`AnimatedMatchStatusBadge`) |
+| `cf-points-pop` | Delta de pontos (`PointsDelta`) |
+| `cf-timer-urgent` | Últimos 10s do Copa Pare |
+| `cf-rank-gold-glow` | Destaque do 1º no ranking |
+
+### Visual Copa (sem bandeira literal)
+
+- `CopaAmbient` — gramado, arco de gol, bola, brilho troféu (`src/components/patterns/copa-ambient.tsx`)
+- `CopaPareSuccess` — tela pós-envio com `variant="celebrate"`
+- Variantes: `home`, `sala`, `celebrate` — ver `PRODUCT.md` anti-references
 
 ## Components (use these first)
 
@@ -87,13 +109,19 @@ Definidos em `:root` e `.dark` em `src/app/globals.css`. Use Tailwind theme alia
 | `RoomCodeDisplay` | Convite + copiar link + QR |
 | `RoomCodeInput` | Entrar por código |
 | `ParticipantRow` | Lista no lobby |
-| `HostControlPanel` | Só dono da sala |
+| `HostGameControl` | Anfitrião: status, ações e roteiro compacto |
+| `RoomMatchHero` | Hero da partida no game board da sala |
+| `RoomProgressLine` | Linha resumo: posição e pontos |
+| `CopaPareEventPill` | CTA fixo acima da tab bar quando Copa Pare está ativo |
+| `RoundResultCard` | Fechamento pós-ação (palpite, Copa Pare, fim de jogo) |
 | `PredictionCard` | Uma pergunta por card |
 | `PointsDelta` | +10, +50, +100 |
 | `RankRow` | Ranking com top 3 |
 | `PhotoTile` | Feed de fotos |
 | `CopaPareTimer` | Intervalo |
 | `EmptyState` | Listas vazias, erros suaves |
+| `ShareScoreCard` | Perfil — compartilhar placar com Web Share/copy |
+| `QuickReactionBar` | Sala ao vivo — 5 reações fixas, sem chat |
 
 **Rule:** Do not rebuild domain UI with raw `div` + borders. Extend patterns or add a new pattern file.
 
@@ -102,9 +130,11 @@ Definidos em `:root` e `.dark` em `src/app/globals.css`. Use Tailwind theme alia
 | Route | Status | Patterns |
 | --- | --- | --- |
 | `/` | Done | Landing — `Button`, `Badge` |
-| `/criar-sala` | Done | `CreateRoomForm` + avatar picker |
+| `/calendario` | Done | `FixtureRow`, optional API-Sports league widget |
+| `/criar-sala` | Done | `CreateRoomForm` + `FixturePicker` + avatar picker |
 | `/entrar` | Done | `JoinRoomForm` + `RoomCodeInput` (`?code=` prefill) |
-| `/sala/[roomCode]` | Done | Lobby — `RoomCodeDisplay`, `ParticipantRow`, `HostControlPanel` |
+| `/sala/[roomCode]` | Done | Game board — `RoomMatchHero`, participantes, convite, `HostGameControl` |
+| `/sala/[roomCode]/perfil` | Done | Pontos, breakdown, medalhas |
 | `/sala/[roomCode]/palpites` | Done | `PredictionForm` / submitted summary |
 | `/sala/[roomCode]/ranking` | Done | `RankRow` list |
 
@@ -112,13 +142,16 @@ Route helpers: `src/lib/routes.ts`.
 
 ## Layout rules
 
-- Max content width: `max-w-md` centered on mobile-first screens (~390px design target)
-- Horizontal padding: `p-4` / `px-4`
-- **Sala:** fixed bottom tab bar (`RoomShell`, `--sala-tab-bar-height`); content `pb` clears bar + safe area
-- **Forms:** primary submit in `StickyFormSubmit` (thumb zone); palpites form uses `withSalaNav` offset
-- **Home:** `OnboardingSteps` + sticky bottom CTAs
-- Inputs: `h-11` (16px text, no iOS zoom)
-- One primary action per screen section
+Full shell map and primitives: **`LAYOUT.md`**.
+
+- Max content width: `max-w-md` via `SiteShell` / `RoomShell`
+- Horizontal padding: `var(--site-page-px)` (1rem)
+- Section vertical rhythm: `var(--site-section-gap)` via `PageStack` / `PageSection`
+- **Sala:** `RoomShell` + `PageStack`; grid layout with scrollable `main` and in-flow bottom tab bar
+- **Flow routes:** `FlowPage` (title + back) → form card without duplicate headers
+- **Home:** `SiteShell` + `SiteStickyFooter` for CTAs
+- **Forms:** `StickyFormSubmit` (thumb zone); palpites uses `withSalaNav`
+- Inputs: `h-11`; one primary action per screen section
 - Match status visible in room header at all times
 
 ## Copy (micro)
@@ -127,6 +160,17 @@ Route helpers: `src/lib/routes.ts`.
 - Empty states: convite à ação (`EmptyState`)
 - Pontos: sempre com sinal explícito (`PointsDelta`, `pt-BR` locale)
 - Anfitrião: “Dono”, não “Admin”
+
+## FC Quiz–inspired patterns (hierarchy only)
+
+Borrow from competitive mobile quiz UIs **without** dark/neon reskin:
+
+- One dominant CTA per screen section (`Button` `party` / `celebrate`).
+- Slim progress line: position + points (`RoomProgressLine`).
+- Answer tiles: full-width choices, clear selected state (`PredictionCard`, Copa Pare).
+- Result moment: headline + points delta + two actions (`RoundResultCard`, `CopaPareSuccess`).
+
+Keep **Copa festiva** tokens; do not add coins, ELO, or opponent-vs-you framing for the whole app.
 
 ## Anti-patterns (do not ship)
 
@@ -148,7 +192,12 @@ Route helpers: `src/lib/routes.ts`.
 
 ## Changelog
 
+- **2026-06-02:** Production readiness social/ops — `ShareScoreCard`, `QuickReactionBar`, Copa Pare halftime-first, métricas de host completion/retorno
+- **2026-06-02:** Calendário Copa (`/calendario`), `FixturePicker` / `FixtureRow`, widgets API-Sports opcionais
+- **2026-06-02:** Vitrine do catálogo — `WorldCupSummaryStrip`, cards com bandeiras e CTA `Criar sala`; `/admin/catalogo` (status + sync server-only); hero da sala com `TeamVersusStrip`; `/criar-sala?fixture=<uuid>`
 - **2026-05-31:** QR Code no convite (`RoomQrPanel` expansível); Playwright E2E mobile 390×844
 - **2026-05-31:** Impeccable adapt/layout/onboard — bottom sala nav, sticky form CTAs, onboarding na home, inputs 44px
 - **2026-05-31:** Polish Impeccable — copy pt-BR, a11y (nav, badges, forms), harden nomes longos, CTAs 44px, erros de servidor
 - **2026-05-31:** V1 — Copa festiva tokens, Bricolage + Nunito, patterns layer, landing updated
+- **2026-06-01:** Room game board (`RoomMatchHero`, ranking preview, challenges, activity); landing simplified; FC Quiz hierarchy on Copa tokens
+- **2026-06-01:** Room nav `Jogo | Palpite | Ranking | Perfil`; Copa Pare via event pill + hero CTA; Jogo simplified

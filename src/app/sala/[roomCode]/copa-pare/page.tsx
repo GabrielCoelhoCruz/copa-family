@@ -2,8 +2,10 @@ import Link from 'next/link'
 import { PartyPopper } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
-import { CopaPareForm } from '@/components/copa-pare-form'
+import { CopaParePlay } from '@/components/copa-pare-play'
+import { CopaPareSuccess } from '@/components/patterns/copa-pare-success'
 import { EmptyState } from '@/components/patterns/empty-state'
+import { isCopaParePlayPhase } from '@/features/rooms/copa-pare-visibility'
 import { getCopaPareEntry, getRoomContext } from '@/features/rooms/queries'
 import { routes } from '@/lib/routes'
 import { getGuestUserId } from '@/lib/session'
@@ -15,12 +17,7 @@ type CopaParePageProps = {
   searchParams: Promise<{ enviado?: string }>
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  player: 'Jogador',
-  team: 'Seleção',
-  coach: 'Técnico',
-  stadium: 'Estádio',
-}
+import { COPA_PARE_CATEGORY_LABELS, type CopaPareCategoryValue } from '@/lib/copa-pare-categories'
 
 export default async function CopaParePage({
   params,
@@ -36,24 +33,22 @@ export default async function CopaParePage({
 
   const userId = await getGuestUserId()
   const { room, match } = context
-  const canPlay = match.status === 'halftime' || match.status === 'live'
+  const canPlay = isCopaParePlayPhase(match.status)
   const existing =
-    userId != null
-      ? await getCopaPareEntry(match.id, userId)
-      : null
+    userId != null ? await getCopaPareEntry(match.id, userId) : null
 
   if (!canPlay) {
     return (
       <EmptyState
         icon={<PartyPopper className="size-6" />}
         title="Copa Pare no intervalo"
-        description="Peça ao anfitrião para abrir o intervalo. Aí você responde em 30 segundos e ganha +100 pts."
+        description="Quando o anfitrião abrir o intervalo, o botão Copa Pare aparece na tela Jogo (+100 pts). Durante o ao vivo, use as reações rápidas da sala."
         action={
           <Link
             href={routes.sala(room.code)}
             className={cn(buttonVariants({ variant: 'outline' }), 'min-h-11')}
           >
-            Voltar ao lobby
+            Voltar ao jogo
           </Link>
         }
       />
@@ -62,27 +57,17 @@ export default async function CopaParePage({
 
   if (existing || enviado === '1') {
     return (
-      <div className="flex flex-col gap-4">
-        <div
-          className="rounded-2xl border border-match-finished/35 bg-gradient-to-br from-match-finished/15 to-card p-4 text-sm shadow-sm"
-          role="status"
-        >
-          <p className="font-semibold text-foreground">Você já entrou no Copa Pare!</p>
-          {existing ? (
-            <p className="mt-1 text-muted-foreground">
-              {CATEGORY_LABELS[existing.category] ?? existing.category}:{' '}
-              <span className="font-medium text-foreground">{existing.answer}</span>
-            </p>
-          ) : null}
-          <p className="mt-2 text-muted-foreground">+100 pts na sua conta.</p>
-        </div>
-        <Link
-          href={routes.ranking(room.code)}
-          className={cn(buttonVariants({ variant: 'party' }), 'min-h-11 w-full')}
-        >
-          Ver ranking
-        </Link>
-      </div>
+      <CopaPareSuccess
+        categoryLabel={
+          existing
+            ? (COPA_PARE_CATEGORY_LABELS[existing.category as CopaPareCategoryValue] ??
+              existing.category)
+            : undefined
+        }
+        answer={existing?.answer}
+        rankingHref={routes.ranking(room.code)}
+        roomCode={room.code}
+      />
     )
   }
 
@@ -97,11 +82,11 @@ export default async function CopaParePage({
   }
 
   return (
-    <CopaPareForm
+    <CopaParePlay
       matchId={match.id}
       roomId={room.id}
       roomCode={room.code}
-      userId={userId}
+      seed={`${match.id}-${userId}`}
     />
   )
 }

@@ -63,7 +63,9 @@
 }
 
 :root {
-  --sala-tab-bar-height: 4.25rem;
+  --site-page-px: 1rem;
+  --site-section-gap: 1rem;
+  --sticky-submit-clearance: 4rem;
   --background: oklch(0.985 0.026 91.7);
   --foreground: oklch(0.205 0.041 49.3);
   --card: oklch(0.997 0.01 95.1);
@@ -197,5 +199,152 @@
       scroll-behavior: auto !important;
       transition-duration: 0.01ms !important;
     }
+  }
+}
+
+/* Copa Family motion — use with /impeccable animate (transform + opacity only) */
+@keyframes cf-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes cf-live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.88);
+  }
+}
+
+@keyframes cf-trophy-shine {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateX(-8%) scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: translateX(8%) scale(1.02);
+  }
+}
+
+@keyframes cf-ball-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(8deg);
+  }
+}
+
+@keyframes cf-status-swap {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cf-points-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  65% {
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cf-timer-urgent {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@layer utilities {
+  .cf-animate-in {
+    animation: cf-enter var(--duration-base) var(--ease-out-strong) both;
+  }
+
+  .cf-animate-in-slow {
+    animation: cf-enter var(--duration-slow) var(--ease-out-strong) both;
+  }
+
+  .cf-stagger-children > * {
+    animation: cf-enter var(--duration-base) var(--ease-out-strong) both;
+    animation-delay: calc(var(--cf-i, 0) * 55ms);
+  }
+
+  .cf-pressable {
+    transition:
+      transform var(--duration-fast) var(--ease-out-strong),
+      box-shadow var(--duration-fast) var(--ease-out-strong),
+      background-color var(--duration-fast) ease;
+  }
+
+  .cf-pressable:active {
+    transform: scale(0.97);
+  }
+
+  .cf-live-dot {
+    animation: cf-live-pulse 1.1s var(--ease-out-strong) infinite;
+  }
+
+  .cf-trophy-glow {
+    animation: cf-trophy-shine 4.5s var(--ease-in-out-strong) infinite;
+  }
+
+  .cf-ball-float {
+    animation: cf-ball-float 3.2s var(--ease-in-out-strong) infinite;
+  }
+
+  .cf-status-swap {
+    animation: cf-status-swap var(--duration-base) var(--ease-out-strong) both;
+  }
+
+  .cf-points-pop {
+    animation: cf-points-pop 280ms var(--ease-out-strong) both;
+  }
+
+  .cf-timer-urgent {
+    animation: cf-timer-urgent 0.85s var(--ease-out-strong) infinite;
+  }
+
+  .cf-rank-gold-glow {
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--rank-gold), transparent 50%),
+      0 4px 20px color-mix(in oklch, var(--rank-gold), transparent 75%);
+  }
+
+  .cf-scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .cf-scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 }

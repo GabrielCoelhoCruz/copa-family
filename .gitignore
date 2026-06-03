@@ -28,7 +28,18 @@
 .cursor/
 .omc/
 
+# local seed artifacts (generated SQL/MCP payloads)
+/batch-*.sql
+/all-batches.sql
+/scripts/mcp-payload-*.json
+/scripts/.mcp-invoke-*.json
+/scripts/_mcp-*
+/scripts/_q*.txt
+.tmp-fixtures.json
+
 # misc
+stderr.txt
+batches.sql
 .DS_Store
 *.pem
 

@@ -1,11 +1,6 @@
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
-
-import { FlowLayout } from '@/components/flow-layout'
 import { JoinRoomForm } from '@/components/join-room-form'
-import { buttonVariants } from '@/components/ui/button'
+import { FlowPage } from '@/components/layouts/flow-page'
 import { routes } from '@/lib/routes'
-import { cn } from '@/lib/utils'
 
 type EntrarPageProps = {
   searchParams: Promise<{ code?: string }>
@@ -16,16 +11,12 @@ export default async function EntrarPage({ searchParams }: EntrarPageProps) {
   const defaultRoomCode = code?.trim().toUpperCase() ?? ''
 
   return (
-    <FlowLayout>
-      <Link
-        href={routes.home}
-        className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'w-fit -ml-1')}
-      >
-        <ArrowLeft />
-        Voltar
-      </Link>
-
+    <FlowPage
+      backHref={routes.home}
+      title="Entrar na sala"
+      description="Cole o código de 6 letras que veio no link ou no grupo."
+    >
       <JoinRoomForm defaultRoomCode={defaultRoomCode} />
-    </FlowLayout>
+    </FlowPage>
   )
 }

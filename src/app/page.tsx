@@ -1,7 +1,12 @@
 import Link from 'next/link'
-import { Camera, Crown, Trophy, Users } from 'lucide-react'
+import { Trophy } from 'lucide-react'
 
 import { OnboardingSteps } from '@/components/onboarding-steps'
+import { SiteShell } from '@/components/layouts/site-shell'
+import { SiteStickyFooter } from '@/components/layouts/site-sticky-footer'
+import { HomeFeatureBento } from '@/components/patterns/home-feature-bento'
+import { HomeHeroVisual } from '@/components/patterns/home-hero-visual'
+import { PwaInstallBanner } from '@/components/pwa-install-banner'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { routes } from '@/lib/routes'
@@ -9,82 +14,94 @@ import { cn } from '@/lib/utils'
 
 export default function Home() {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-6">
-      <div className="flex flex-1 flex-col gap-6">
-        <section className="relative flex flex-col items-center gap-5 rounded-[2rem] border border-border bg-card/90 p-5 text-center shadow-lg shadow-brand-field/10">
-          <div
-            className="pointer-events-none absolute -top-12 right-2 size-28 rounded-full bg-brand-trophy/25 blur-3xl"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute -bottom-10 left-2 size-24 rounded-full bg-brand-sky/20 blur-3xl"
-            aria-hidden
-          />
-
-          <Badge variant="match-halftime" className="relative h-7 px-3">
-            <Trophy />
-            Jogo social da Copa
-          </Badge>
-
-          <div className="relative space-y-2">
-            <h1 className="font-heading text-4xl font-black tracking-tight text-foreground">
-              Copa Family
-            </h1>
-            <p className="text-pretty text-base leading-relaxed text-muted-foreground">
-              Sala rápida, palpite antes do jogo e ranking com a família — tudo no celular.
+    <SiteShell
+      ambient="home"
+      mainClassName="cf-scrollbar-hidden flex-1 gap-[var(--site-section-gap)] overflow-x-hidden px-[var(--site-page-px)] pb-36 pt-6"
+      footer={
+        <SiteStickyFooter>
+          <div className="space-y-3">
+            <Link
+              href={routes.criarSala}
+              className={cn(
+                buttonVariants({ variant: 'party', size: 'lg' }),
+                'cf-pressable flex min-h-12 w-full items-center justify-center'
+              )}
+            >
+              Criar sala
+            </Link>
+            <Link
+              href={routes.entrar}
+              className={cn(
+                buttonVariants({ variant: 'outline', size: 'lg' }),
+                'cf-pressable flex min-h-12 w-full items-center justify-center bg-card/80'
+              )}
+            >
+              Entrar com código
+            </Link>
+            <p className="text-center text-xs text-muted-foreground">
+              Sem cadastro. Comece em menos de 1 minuto.
             </p>
           </div>
+        </SiteStickyFooter>
+      }
+    >
+      <section className="cf-animate-in relative flex flex-col items-center gap-5 rounded-[2rem] border border-border bg-card/90 p-5 text-center shadow-lg shadow-brand-field/10">
+        <Badge variant="match-halftime" className="relative h-7 px-3">
+          <Trophy />
+          Jogo social da Copa
+        </Badge>
 
-          <div className="relative grid w-full grid-cols-3 gap-2">
-            <div className="rounded-2xl border border-brand-field/20 bg-brand-field/10 p-2.5">
-              <Users className="mx-auto mb-1.5 size-5 text-brand-field" />
-              <p className="text-[11px] font-bold leading-tight">Salas</p>
-            </div>
-            <div className="rounded-2xl border border-brand-party/20 bg-brand-party/10 p-2.5">
-              <Camera className="mx-auto mb-1.5 size-5 text-brand-party" />
-              <p className="text-[11px] font-bold leading-tight">Fotos</p>
-            </div>
-            <div className="rounded-2xl border border-rank-gold/30 bg-rank-gold/15 p-2.5">
-              <Crown className="mx-auto mb-1.5 size-5 text-rank-gold" />
-              <p className="text-[11px] font-bold leading-tight">Ranking</p>
-            </div>
-          </div>
-        </section>
+        <div className="relative space-y-2">
+          <h1 className="font-heading text-4xl font-black tracking-tight text-foreground">
+            Copa Family
+          </h1>
+          <p className="text-pretty text-base leading-relaxed text-muted-foreground">
+            Transforme cada jogo em competição em família. Crie a sala, convide e jogue.
+          </p>
+        </div>
 
-        <section aria-labelledby="como-funciona-heading" className="space-y-3">
-          <h2
-            id="como-funciona-heading"
-            className="font-heading text-lg font-bold tracking-tight"
+        <HomeHeroVisual />
+      </section>
+
+      <PwaInstallBanner />
+
+      <section
+        aria-labelledby="como-funciona-heading"
+        className="cf-animate-in space-y-3"
+        style={{ animationDelay: '80ms' }}
+      >
+        <h2
+          id="como-funciona-heading"
+          className="font-heading text-lg font-bold tracking-tight"
+        >
+          Como funciona
+        </h2>
+        <OnboardingSteps />
+      </section>
+
+      <section
+        aria-labelledby="recursos-heading"
+        className="cf-animate-in space-y-3 pb-4"
+        style={{ animationDelay: '120ms' }}
+      >
+        <h2
+          id="recursos-heading"
+          className="font-heading text-lg font-bold tracking-tight"
+        >
+          O que você faz na sala
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Palpite, ranking e perfil nas abas da sala. Copa Pare aparece no intervalo.{' '}
+          <Link
+            href={routes.calendario}
+            className="font-semibold text-brand-field underline-offset-2 hover:underline"
           >
-            Como funciona
-          </h2>
-          <OnboardingSteps />
-        </section>
-      </div>
-
-      <div className="sticky bottom-[env(safe-area-inset-bottom)] z-20 -mx-1 space-y-3 border-t border-border/80 bg-background/95 px-1 pt-3 backdrop-blur-md">
-        <Link
-          href={routes.criarSala}
-          className={cn(
-            buttonVariants({ variant: 'party', size: 'lg' }),
-            'flex min-h-12 w-full items-center justify-center'
-          )}
-        >
-          Criar sala
-        </Link>
-        <Link
-          href={routes.entrar}
-          className={cn(
-            buttonVariants({ variant: 'outline', size: 'lg' }),
-            'flex min-h-12 w-full items-center justify-center bg-card/80'
-          )}
-        >
-          Entrar com código
-        </Link>
-        <p className="text-center text-xs text-muted-foreground">
-          Sem cadastro. Comece em menos de 1 minuto.
+            Ver calendário da Copa
+          </Link>
+          .
         </p>
-      </div>
-    </main>
+        <HomeFeatureBento />
+      </section>
+    </SiteShell>
   )
 }

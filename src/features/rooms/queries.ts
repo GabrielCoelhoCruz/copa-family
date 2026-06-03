@@ -1,11 +1,17 @@
+import { cache } from 'react'
+
+import { withRankingPositions } from '@/lib/ranking'
 import { createClient } from '@/lib/supabase/server'
-import type { DbMatch, DbRoom, DbRoomMember, MatchStatus } from '@/lib/types'
+import { getFixtureById } from '@/features/fixtures/queries'
+import type { DbMatch, DbRoom, DbRoomMember } from '@/lib/types'
+
+import { resolveRoomNextAction, type RoomNextAction } from './room-next-action'
 
 export async function getRoomByCode(roomCode: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('rooms')
-    .select('id, code, name, owner_user_id')
+    .select('id, code, name, owner_user_id, created_at, last_host_action_at')
     .eq('code', roomCode.toUpperCase())
     .maybeSingle()
 
@@ -18,7 +24,7 @@ export async function getCurrentMatch(roomId: string) {
   const { data, error } = await supabase
     .from('matches')
     .select(
-      'id, room_id, title, status, home_score, away_score, winner, player_of_match'
+      'id, room_id, title, status, fixture_id, home_score, away_score, winner, player_of_match'
     )
     .eq('room_id', roomId)
     .order('created_at', { ascending: false })
@@ -27,6 +33,20 @@ export async function getCurrentMatch(roomId: string) {
 
   if (error) throw error
   return data as DbMatch | null
+}
+
+export async function getRoomMatchHistory(roomId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('matches')
+    .select(
+      'id, room_id, title, status, fixture_id, home_score, away_score, winner, player_of_match'
+    )
+    .eq('room_id', roomId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data ?? []) as DbMatch[]
 }
 
 export async function getLobbyStats(roomId: string, matchId: string) {
@@ -68,6 +88,27 @@ export async function getMvpMetrics(): Promise<MvpMetricRow[]> {
     .sort((a, b) => b.count - a.count)
 }
 
+export async function getUserPointsInRoom(roomId: string, userId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('points')
+    .select('source, amount, metadata')
+    .eq('room_id', roomId)
+    .eq('user_id', userId)
+
+  if (error) throw error
+
+  const rows = (data ?? []).map((row) => ({
+    source: row.source,
+    amount: row.amount,
+    metadata: row.metadata,
+  }))
+  const total = rows.reduce((sum, row) => sum + row.amount, 0)
+  const sources = new Set(rows.map((row) => row.source))
+
+  return { rows, total, sources }
+}
+
 export async function getUserRoomProfile(roomId: string, userId: string) {
   const supabase = await createClient()
   const { data: member } = await supabase
@@ -80,26 +121,42 @@ export async function getUserRoomProfile(roomId: string, userId: string) {
   if (!member) return null
 
   const users = Array.isArray(member.users) ? member.users[0] : member.users
-  const pointsByUser = await getMemberPoints(roomId)
-
-  const { data: pointRows } = await supabase
-    .from('points')
-    .select('source')
-    .eq('room_id', roomId)
-    .eq('user_id', userId)
-
-  const sources = new Set((pointRows ?? []).map((row) => row.source))
+  const { rows, total, sources } = await getUserPointsInRoom(roomId, userId)
 
   return {
     displayName: users?.display_name ?? 'Jogador',
     avatarKey: users?.avatar_key ?? 'lion',
     role: member.role as DbRoomMember['role'],
-    points: pointsByUser.get(userId) ?? 0,
+    points: total,
     sources,
+    pointRows: rows,
   }
 }
 
-export async function getCopaPareEntry(matchId: string, userId: string) {
+export async function getMatchPredictionSuggestions(matchId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('predictions')
+    .select('winner, player_of_match')
+    .eq('match_id', matchId)
+
+  if (error) throw error
+
+  const winners = new Set<string>()
+  const players = new Set<string>()
+
+  for (const row of data ?? []) {
+    if (row.winner?.trim()) winners.add(row.winner.trim())
+    if (row.player_of_match?.trim()) players.add(row.player_of_match.trim())
+  }
+
+  return {
+    winners: [...winners].sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    players: [...players].sort((a, b) => a.localeCompare(b, 'pt-BR')),
+  }
+}
+
+export const getCopaPareEntry = cache(async (matchId: string, userId: string) => {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('copa_pare_entries')
@@ -110,7 +167,7 @@ export async function getCopaPareEntry(matchId: string, userId: string) {
 
   if (error) throw error
   return data
-}
+})
 
 export async function getRoomMembers(roomId: string) {
   const supabase = await createClient()
@@ -135,11 +192,25 @@ export async function getRoomMembers(roomId: string) {
 }
 
 export async function getMemberPoints(roomId: string) {
+  return getMemberPointsForScope(roomId)
+}
+
+export async function getMemberPointsForMatch(roomId: string, matchId: string) {
+  return getMemberPointsForScope(roomId, matchId)
+}
+
+async function getMemberPointsForScope(roomId: string, matchId?: string) {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from('points')
     .select('user_id, amount')
     .eq('room_id', roomId)
+
+  if (matchId) {
+    query = query.eq('match_id', matchId)
+  }
+
+  const { data, error } = await query
 
   if (error) throw error
 
@@ -150,7 +221,7 @@ export async function getMemberPoints(roomId: string) {
   return totals
 }
 
-export async function getRoomContext(roomCode: string) {
+export const getRoomContext = cache(async (roomCode: string) => {
   const room = await getRoomByCode(roomCode)
   if (!room) return null
 
@@ -162,8 +233,15 @@ export async function getRoomContext(roomCode: string) {
 
   if (!match) return null
 
-  return { room, match, members, pointsByUser }
-}
+  const fixture =
+    match.fixture_id != null
+      ? await getFixtureById(match.fixture_id)
+      : null
+
+  return { room, match, fixture, members, pointsByUser }
+})
+
+export type RoomContext = NonNullable<Awaited<ReturnType<typeof getRoomContext>>>
 
 export type RankingEntry = {
   userId: string
@@ -171,6 +249,18 @@ export type RankingEntry = {
   avatarKey: string
   role: DbRoomMember['role']
   points: number
+}
+
+function rankingFromContext(context: RoomContext): RankingEntry[] {
+  return context.members
+    .map((member) => ({
+      userId: member.user_id,
+      displayName: member.users.display_name,
+      avatarKey: member.users.avatar_key,
+      role: member.role,
+      points: context.pointsByUser.get(member.user_id) ?? 0,
+    }))
+    .sort((left, right) => right.points - left.points)
 }
 
 export async function getRanking(roomId: string): Promise<RankingEntry[]> {
@@ -190,6 +280,50 @@ export async function getRanking(roomId: string): Promise<RankingEntry[]> {
     .sort((left, right) => right.points - left.points)
 }
 
+export async function getMatchRanking(
+  roomId: string,
+  matchId: string
+): Promise<RankingEntry[]> {
+  const [members, pointsByUser] = await Promise.all([
+    getRoomMembers(roomId),
+    getMemberPointsForMatch(roomId, matchId),
+  ])
+
+  return members
+    .map((member) => ({
+      userId: member.user_id,
+      displayName: member.users.display_name,
+      avatarKey: member.users.avatar_key,
+      role: member.role,
+      points: pointsByUser.get(member.user_id) ?? 0,
+    }))
+    .sort((left, right) => right.points - left.points)
+}
+
+export async function getUserWinnerStreakSummary(roomId: string, userId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('points')
+    .select('metadata')
+    .eq('room_id', roomId)
+    .eq('user_id', userId)
+    .eq('source', 'match_winner_correct')
+
+  if (error) throw error
+
+  const streaks = (data ?? [])
+    .map((row) => {
+      const metadata = row.metadata as { streakLength?: unknown } | null
+      return typeof metadata?.streakLength === 'number' ? metadata.streakLength : 0
+    })
+    .filter((streak) => streak > 0)
+
+  return {
+    current: streaks.at(-1) ?? 0,
+    best: streaks.length > 0 ? Math.max(...streaks) : 0,
+  }
+}
+
 export async function getUserPrediction(matchId: string, userId: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -203,18 +337,66 @@ export async function getUserPrediction(matchId: string, userId: string) {
   return data
 }
 
-export async function updateMatchStatus(matchId: string, status: MatchStatus) {
-  const supabase = await createClient()
-  const timestamps: Record<string, string | null> = {}
+export type RoomDashboardData = {
+  stats: { memberCount: number; predictionCount: number }
+  userPosition: number | null
+  userPoints: number
+  currentMatchPoints: number
+  hasPrediction: boolean
+  hasCopaPareEntry: boolean
+  nextAction: RoomNextAction
+  winnerSuggestions: string[]
+  playerSuggestions: string[]
+}
 
-  if (status === 'live') timestamps.started_at = new Date().toISOString()
-  if (status === 'halftime') timestamps.halftime_started_at = new Date().toISOString()
-  if (status === 'finished') timestamps.finished_at = new Date().toISOString()
+export async function getRoomDashboardData(
+  context: RoomContext,
+  userId: string | null,
+  isOwner: boolean
+): Promise<RoomDashboardData> {
+  const { room, match, pointsByUser } = context
 
-  const { error } = await supabase
-    .from('matches')
-    .update({ status, ...timestamps })
-    .eq('id', matchId)
+  const [stats, prediction, copaPareEntry, suggestions, matchPointsByUser] = await Promise.all([
+    getLobbyStats(room.id, match.id),
+    userId != null
+      ? getUserPrediction(match.id, userId)
+      : Promise.resolve(null),
+    userId != null
+      ? getCopaPareEntry(match.id, userId)
+      : Promise.resolve(null),
+    isOwner
+      ? getMatchPredictionSuggestions(match.id)
+      : Promise.resolve({ winners: [], players: [] }),
+    getMemberPointsForMatch(room.id, match.id),
+  ])
 
-  if (error) throw error
+  const userPoints = userId != null ? (pointsByUser.get(userId) ?? 0) : 0
+  const currentMatchPoints =
+    userId != null ? (matchPointsByUser.get(userId) ?? 0) : 0
+  const ranked = withRankingPositions(rankingFromContext(context))
+  const userEntry = userId != null ? ranked.find((e) => e.userId === userId) : null
+  const hasPrediction = prediction != null
+  const hasCopaPareEntry = copaPareEntry != null
+
+  const nextAction = resolveRoomNextAction({
+    roomCode: room.code,
+    status: match.status,
+    isOwner,
+    hasPrediction,
+    hasCopaPareEntry,
+    predictionCount: stats.predictionCount,
+    memberCount: stats.memberCount,
+  })
+
+  return {
+    stats,
+    userPosition: userEntry?.position ?? null,
+    userPoints,
+    currentMatchPoints,
+    hasPrediction,
+    hasCopaPareEntry,
+    nextAction,
+    winnerSuggestions: suggestions.winners,
+    playerSuggestions: suggestions.players,
+  }
 }

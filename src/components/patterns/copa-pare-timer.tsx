@@ -19,11 +19,14 @@ function CopaPareTimer({
 }: CopaPareTimerProps) {
   const safeRemainingSeconds = Math.max(0, Math.min(remainingSeconds, totalSeconds))
   const progress = (safeRemainingSeconds / totalSeconds) * 100
+  const isUrgent = safeRemainingSeconds > 0 && safeRemainingSeconds <= 10
 
   return (
     <Card
       className={cn(
-        "border-match-halftime/30 bg-match-halftime/15 shadow-sm shadow-match-halftime/10",
+        'border-match-halftime/30 bg-match-halftime/15 shadow-sm shadow-match-halftime/10 transition-[border-color,box-shadow] duration-[var(--duration-base)]',
+        isUrgent &&
+          'border-destructive/40 bg-gradient-to-br from-destructive/10 to-match-halftime/15 shadow-md shadow-destructive/15',
         className
       )}
     >
@@ -42,7 +45,13 @@ function CopaPareTimer({
             <Timer className="size-4" />
             Tempo restante
           </p>
-          <p className="font-heading text-6xl font-black tabular-nums leading-none">
+          <p
+            className={cn(
+              'font-heading text-6xl font-black tabular-nums leading-none',
+              isUrgent && 'text-destructive cf-timer-urgent'
+            )}
+            aria-live={isUrgent ? 'assertive' : 'polite'}
+          >
             {safeRemainingSeconds}
           </p>
         </div>
@@ -52,7 +61,10 @@ function CopaPareTimer({
           aria-label={`Restam ${safeRemainingSeconds} segundos`}
         >
           <div
-            className="h-full rounded-full bg-brand-party transition-[width] duration-1000 ease-linear"
+            className={cn(
+              'h-full rounded-full transition-[width,background-color] duration-1000 ease-linear',
+              isUrgent ? 'bg-destructive' : 'bg-brand-party'
+            )}
             style={{ width: `${progress}%` }}
           />
         </div>

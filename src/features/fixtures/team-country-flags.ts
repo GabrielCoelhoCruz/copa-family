@@ -1,0 +1,73 @@
+/** ISO 3166-1 alpha-2 for national team names (World Cup 2026 catalog). */
+export const NATIONAL_TEAM_ISO2: Record<string, string> = {
+  Algeria: 'dz',
+  Argentina: 'ar',
+  Australia: 'au',
+  Austria: 'at',
+  Belgium: 'be',
+  'Bosnia & Herzegovina': 'ba',
+  'Bosnia-Herzegovina': 'ba',
+  Brazil: 'br',
+  Cameroon: 'cm',
+  Canada: 'ca',
+  'Cape Verde': 'cv',
+  Chile: 'cl',
+  Colombia: 'co',
+  'Costa Rica': 'cr',
+  Croatia: 'hr',
+  Curaçao: 'cw',
+  'Czech Republic': 'cz',
+  Denmark: 'dk',
+  Ecuador: 'ec',
+  Egypt: 'eg',
+  England: 'gb-eng',
+  France: 'fr',
+  Germany: 'de',
+  Ghana: 'gh',
+  Greece: 'gr',
+  Haiti: 'ht',
+  Iran: 'ir',
+  Iraq: 'iq',
+  'Ivory Coast': 'ci',
+  Japan: 'jp',
+  Jordan: 'jo',
+  Mexico: 'mx',
+  Morocco: 'ma',
+  Netherlands: 'nl',
+  'New Zealand': 'nz',
+  Norway: 'no',
+  Panama: 'pa',
+  Paraguay: 'py',
+  Peru: 'pe',
+  Poland: 'pl',
+  Portugal: 'pt',
+  Qatar: 'qa',
+  Romania: 'ro',
+  'Saudi Arabia': 'sa',
+  Scotland: 'gb-sct',
+  Senegal: 'sn',
+  'Serbia': 'rs',
+  'South Africa': 'za',
+  'South Korea': 'kr',
+  Spain: 'es',
+  Sweden: 'se',
+  Switzerland: 'ch',
+  Tunisia: 'tn',
+  Turkey: 'tr',
+  USA: 'us',
+  Uruguay: 'uy',
+  Uzbekistan: 'uz',
+  Wales: 'gb-wls',
+  'DR Congo': 'cd',
+  'Democratic Republic of the Congo': 'cd',
+}
+
+export function flagCdnUrl(iso2: string, size = 80): string {
+  return `https://flagcdn.com/w${size}/${iso2}.png`
+}
+
+export function nationalTeamFlagUrl(teamName: string): string | null {
+  const iso = NATIONAL_TEAM_ISO2[teamName]
+  if (!iso) return null
+  return flagCdnUrl(iso)
+}

@@ -1,11 +1,10 @@
 import { expect, test } from '@playwright/test'
 
-const hasSupabase =
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)
+import { E2E_ENV_SKIP_MESSAGE, hasE2EEnv } from './env'
+import { goToPalpitesTab, selectFirstFixtureIfPresent } from './helpers'
 
 test.describe('erros de fluxo', () => {
-  test.skip(!hasSupabase, 'Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
+  test.skip(!hasE2EEnv, E2E_ENV_SKIP_MESSAGE)
 
   test('código inválido ao entrar', async ({ page }) => {
     await page.goto('/entrar')
@@ -25,10 +24,11 @@ test.describe('erros de fluxo', () => {
     await page.goto('/criar-sala')
     await page.getByLabel('Seu nome').fill(displayName)
     await page.getByLabel('Nome da sala').fill(`Sala erro ${stamp}`)
+    await selectFirstFixtureIfPresent(page)
     await page.getByRole('button', { name: 'Criar sala' }).click()
     await expect(page).toHaveURL(/\/sala\/[A-Z0-9]{6}/i, { timeout: 30_000 })
 
-    await page.getByRole('link', { name: 'Palpite', exact: true }).click()
+    await goToPalpitesTab(page)
     await expect(page.getByText(/Palpites fechados/i)).toBeVisible({
       timeout: 15_000,
     })

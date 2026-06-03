@@ -46,7 +46,8 @@ function PredictionCard({
   return (
     <Card
       className={cn(
-        "border-brand-sky/20 bg-card",
+        "border-brand-sky/25 bg-card shadow-sm",
+        state === "open" && "border-brand-sky/35 shadow-brand-sky/10",
         state === "submitted" && "border-match-finished/25 bg-match-finished/5",
         state === "locked" && "opacity-75",
         className

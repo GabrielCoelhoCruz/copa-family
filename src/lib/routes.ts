@@ -1,5 +1,6 @@
 export const routes = {
   home: '/',
+  calendario: '/calendario',
   criarSala: '/criar-sala',
   entrar: '/entrar',
   entrarComCodigo: (roomCode: string) =>
@@ -10,4 +11,7 @@ export const routes = {
   copaPare: (roomCode: string) => `/sala/${roomCode}/copa-pare`,
   perfil: (roomCode: string) => `/sala/${roomCode}/perfil`,
   adminMetricas: '/admin/metricas',
+  adminCatalogo: '/admin/catalogo',
+  criarSalaComFixture: (fixtureId: string) =>
+    `/criar-sala?fixture=${encodeURIComponent(fixtureId)}`,
 } as const

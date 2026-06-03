@@ -4,6 +4,7 @@ export const ANALYTICS_EVENTS = {
   roomCreated: 'room_created',
   roomJoined: 'room_joined',
   predictionSubmitted: 'prediction_submitted',
+  quickReactionSubmitted: 'quick_reaction_submitted',
   matchStarted: 'match_started',
   halftimeStarted: 'halftime_started',
   matchFinished: 'match_finished',
@@ -11,6 +12,11 @@ export const ANALYTICS_EVENTS = {
   qrOpened: 'qr_opened',
   matchResultSubmitted: 'match_result_submitted',
   copaPareSubmitted: 'copa_pare_submitted',
+  actionFailed: 'action_failed',
+  permissionDenied: 'permission_denied',
+  syncFailed: 'sync_failed',
+  scoreFailed: 'score_failed',
+  hostAssumed: 'host_assumed',
 } as const
 
 export type AnalyticsEventName =
@@ -22,6 +28,16 @@ type TrackEventInput = {
   matchId?: string
   userId?: string
   metadata?: Record<string, unknown>
+}
+
+type TrackFailureInput = Omit<TrackEventInput, 'eventName' | 'metadata'> & {
+  eventName:
+    | typeof ANALYTICS_EVENTS.actionFailed
+    | typeof ANALYTICS_EVENTS.permissionDenied
+    | typeof ANALYTICS_EVENTS.syncFailed
+    | typeof ANALYTICS_EVENTS.scoreFailed
+  action: string
+  reason: string
 }
 
 export async function trackEvent({
@@ -43,4 +59,24 @@ export async function trackEvent({
   } catch {
     // Analytics must not break user flows
   }
+}
+
+export async function trackFailureEvent({
+  eventName,
+  action,
+  reason,
+  roomId,
+  matchId,
+  userId,
+}: TrackFailureInput) {
+  await trackEvent({
+    eventName,
+    roomId,
+    matchId,
+    userId,
+    metadata: {
+      action,
+      reason,
+    },
+  })
 }

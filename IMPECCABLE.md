@@ -1,6 +1,6 @@
 # Impeccable — Copa Family
 
-Guia rápido para usar [Impeccable](https://impeccable.style/designing/) neste repositório. Leia sempre **`PRODUCT.md`** + **`DESIGN.md`** antes de pedir mudanças de UI.
+Guia rápido para usar [Impeccable](https://impeccable.style/designing/) neste repositório. Leia sempre **`PRODUCT.md`** + **`DESIGN.md`** + **`LAYOUT.md`** antes de pedir mudanças de UI.
 
 ## Instalação (Cursor)
 
@@ -60,7 +60,8 @@ npm test
 npm run design:detect
 npm run build
 npm run playwright:install   # primeira vez
-npm run test:e2e             # requer .env.local + Supabase
+npm run test:e2e             # .env.local: URL + publishable + SERVICE_ROLE
+# CI local: npm run test:e2e:ci  ou  $env:CI='true'; npm run test:e2e
 ```
 
 No chat: `/impeccable audit src/app` e corrija P0/P1 antes de ship.
@@ -82,11 +83,19 @@ No chat: `/impeccable audit src/app` e corrija P0/P1 antes de ship.
 | `/impeccable typeset` | Hierarquia Bricolage vs Nunito no lobby |
 | `/impeccable layout` | Grid de avatares, tabs da sala |
 | `/impeccable colorize` | Reforçar verde campo / amarelo troféu sem virar carnaval |
-| `/impeccable animate` | Transições em `MatchStatusBadge`, não `transition-all` |
+| `/impeccable animate` | Motion + visual Copa — ver seção abaixo |
 | `/impeccable onboard` | Home → criar/entrar → primeiro palpite (+10 pts) |
 | `/impeccable quieter` | Se alguma tela estiver “gritando” demais |
 
-Evite **`bolder`** se a tela já estiver no limite da direção festiva. Não use a skill Anthropic **`frontend-design`** no mesmo projeto (colide com Impeccable — ver `AGENTS.md`).
+Evite **`bolder`** se a tela já estiver no limite da direção festiva.
+
+**Layout unificado:** shells em `src/components/layouts/` — ver `LAYOUT.md`. Prompt:
+
+```
+/impeccable layout src/app src/components/layouts — read LAYOUT.md, DESIGN.md, PRODUCT.md. Mobile 390px, max-w-md, PageStack rhythm, no nested card soup.
+```
+
+**frontend-design:** `npm run design:install:frontend` — use com tokens Copa (não SaaS genérico). Ver `AGENTS.md`.
 
 ## Mobile-first (foco principal)
 
@@ -127,7 +136,7 @@ Base de layout: `max-w-md`, padding `p-4`, alvos de toque `min-h-11`. Validar se
 | --- | --- | --- |
 | Anti-slop | `npm run design:detect` | Padrões “AI” no código |
 | Unitário | `npm test` | Zod, helpers de UI |
-| E2E mobile | `npm run test:e2e` (Playwright 390×844) | Criar sala → palpite → ranking; QR |
+| E2E mobile | `npm run test:e2e` (6 testes, 390×844) | Criar sala → palpite → ranking; QR; multiusuário |
 | Visual | `/impeccable live` + Chrome ext. | Iteração rápida |
 
 Prompt mobile no Cursor:
@@ -135,6 +144,49 @@ Prompt mobile no Cursor:
 ```
 /impeccable adapt src/app — mobile-only product UI, max-w-md, thumb zone, 390px viewport. Read PRODUCT.md and DESIGN.md. No desktop layouts.
 ```
+
+## Animações + visual Copa (com `/impeccable animate`)
+
+**Princípio (PRODUCT.md):** festa de Copa **sem** bandeira verde-amarela em todo pixel. Use **campo** (`brand-field`), **troféu** (`brand-trophy`), **céu** (`brand-sky`), **festa** (`brand-party`) + motivos de futebol abstratos (gramado, arco, bola).
+
+### O que já existe no código
+
+| Peça | Onde |
+| --- | --- |
+| Tokens + keyframes | `src/app/globals.css` — `cf-animate-in`, `cf-stagger-children`, `cf-live-dot`, … |
+| Atmosphere | `src/components/patterns/copa-ambient.tsx` |
+| Listas | classe `cf-stagger-children` no `ul` + `--cf-i` por item |
+| Live | `MatchStatusBadge` → `cf-live-dot` |
+| Feedback | `SuccessBanner`, CTAs `.cf-pressable` na home |
+
+### Ordem sugerida com Impeccable
+
+| # | Comando | Foco |
+| --- | --- | --- |
+| 1 | `/impeccable animate src/app/page.tsx` | Hero + CTAs; uma entrada, não scroll-reveal em tudo |
+| 2 | `/impeccable animate src/components/patterns/match-status-badge.tsx` | Troca de status (lobby → live → fim) |
+| 3 | `/impeccable animate src/app/sala/[roomCode]/ranking` | Stagger + destaque 1º; celebração sutil em +100 |
+| 4 | `/impeccable animate src/components/copa-pare-play.tsx` | Timer urgente + confirmação (+100) |
+| 5 | `/impeccable colorize src/components/patterns/copa-ambient.tsx` | Refinar gramado/arco sem poluir |
+| 6 | `/impeccable quieter src/app` | Se ficar cansativo, cortar decor |
+
+**Regras ao pedir animate:** 150–250 ms na maior parte; só `transform`/`opacity` em UI; sem `transition-all`; sem bounce/elastic; respeitar `prefers-reduced-motion`. Referência: `.cursor/skills/impeccable/reference/animate.md`.
+
+### Prompt único (copiar)
+
+```
+/impeccable animate src/app and src/components/patterns — read PRODUCT.md, DESIGN.md (Motion + Copa visual). Mobile 390px. Use existing cf-* classes in globals.css and CopaAmbient; add purposeful motion on: status changes, success after palpite/resultado, ranking top 3, Copa Pare timer. Football/Copa atmosphere without literal Brazil flag. No page-load choreography on every section.
+```
+
+### Momentos de alto impacto (priorize estes)
+
+1. **Status da partida** — pulso ao vivo, transição suave ao encerrar
+2. **+10 / +50 / +100** — micro pop no delta de pontos (se existir componente)
+3. **Ranking** — stagger na lista; brilho discreto no 1º
+4. **Copa Pare** — timer nos últimos 10s; burst leve ao enviar
+5. **Home** — `CopaAmbient` + uma entrada no hero (já iniciado)
+
+Evite: fade-on-scroll em cada bloco, confetti em todo clique, animar `width`/`height`.
 
 ## Prompts prontos (copiar no Cursor)
 

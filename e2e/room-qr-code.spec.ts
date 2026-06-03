@@ -1,11 +1,10 @@
 import { expect, test } from '@playwright/test'
 
-const hasSupabase =
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)
+import { E2E_ENV_SKIP_MESSAGE, hasE2EEnv } from './env'
+import { selectFirstFixtureIfPresent } from './helpers'
 
 test.describe('QR Code do convite', () => {
-  test.skip(!hasSupabase, 'Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
+  test.skip(!hasE2EEnv, E2E_ENV_SKIP_MESSAGE)
 
   test('abre diálogo com imagem do QR após criar sala', async ({ page }) => {
     const stamp = Date.now()
@@ -13,6 +12,7 @@ test.describe('QR Code do convite', () => {
     await page.goto('/criar-sala')
     await page.getByLabel('Seu nome').fill(`QR ${stamp}`)
     await page.getByLabel('Nome da sala').fill(`QR sala ${stamp}`)
+    await selectFirstFixtureIfPresent(page)
     await page.getByRole('button', { name: 'Criar sala' }).click()
 
     await expect(page).toHaveURL(/\/sala\/[A-Z0-9]{6}/i, { timeout: 30_000 })

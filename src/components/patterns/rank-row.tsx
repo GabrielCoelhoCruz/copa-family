@@ -12,6 +12,7 @@ type RankRowProps = {
   avatarUrl?: string
   fallback: string
   isCurrentUser?: boolean
+  detail?: string
   className?: string
 }
 
@@ -28,6 +29,7 @@ function RankRow({
   avatarUrl,
   fallback,
   isCurrentUser = false,
+  detail,
   className,
 }: RankRowProps) {
   const topRankVariant =
@@ -40,7 +42,7 @@ function RankRow({
       className={cn(
         "flex min-h-14 items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 shadow-sm transition-[background-color,border-color,box-shadow] duration-[var(--duration-base)] ease-[var(--ease-out-strong)]",
         isCurrentUser && "border-primary/30 bg-primary/5 shadow-primary/10",
-        position === 1 && "border-rank-gold/40 bg-rank-gold/10",
+        position === 1 && "border-rank-gold/40 bg-rank-gold/10 cf-rank-gold-glow",
         className
       )}
     >
@@ -65,6 +67,9 @@ function RankRow({
         <p className="font-heading text-lg font-bold tabular-nums text-foreground">
           {points.toLocaleString("pt-BR")} pts
         </p>
+        {detail ? (
+          <p className="text-xs font-medium text-muted-foreground">{detail}</p>
+        ) : null}
       </div>
 
       {topRankVariant ? (

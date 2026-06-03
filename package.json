@@ -8,12 +8,17 @@
     "start": "next start",
     "lint": "eslint",
     "design:install": "node scripts/install-impeccable-skills.mjs",
+    "design:install:frontend": "node scripts/install-frontend-design-skill.mjs",
+    "design:install:all": "npm run design:install && npm run design:install:frontend",
     "design:check": "node scripts/design-check.mjs",
     "design:detect": "impeccable detect src/",
     "design:ci": "npm run lint && npm run design:detect && npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
+    "sync:catalog": "node scripts/sync-world-cup-catalog.mjs",
+    "enrich:flags": "npx tsx scripts/run-enrich-flags.ts",
     "test:e2e": "playwright test",
+    "test:e2e:ci": "cross-env CI=true playwright test",
     "test:e2e:ui": "playwright test --ui",
     "playwright:install": "playwright install chromium"
   },
@@ -34,6 +39,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -41,14 +47,14 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "impeccable": "^2.3.2",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.7",
-    "@playwright/test": "^1.55.0",
-    "dotenv": "^17.2.1"
+    "vitest": "^4.1.7"
   }
 }

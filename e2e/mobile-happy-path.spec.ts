@@ -1,11 +1,16 @@
 import { expect, test } from '@playwright/test'
 
-const hasSupabase =
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)
+import { E2E_ENV_SKIP_MESSAGE, hasE2EEnv } from './env'
+import {
+  goToPalpitesTab,
+  goToRankingTab,
+  openPalpitesAsHost,
+  selectFirstFixtureIfPresent,
+  submitBasicPrediction,
+} from './helpers'
 
 test.describe('fluxo mobile 390px', () => {
-  test.skip(!hasSupabase, 'Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
+  test.skip(!hasE2EEnv, E2E_ENV_SKIP_MESSAGE)
 
   test('criar sala → abrir palpites → enviar → ranking 10 pts', async ({
     page,
@@ -22,6 +27,7 @@ test.describe('fluxo mobile 390px', () => {
 
     await page.getByLabel('Seu nome').fill(displayName)
     await page.getByLabel('Nome da sala').fill(roomName)
+    await selectFirstFixtureIfPresent(page)
     await page.getByRole('button', { name: 'Criar sala' }).click()
 
     await expect(page).toHaveURL(/\/sala\/[A-Z0-9]{6}/i, { timeout: 30_000 })
@@ -34,27 +40,24 @@ test.describe('fluxo mobile 390px', () => {
       page.getByRole('img', { name: /QR Code do link de convite/i })
     ).toBeVisible({ timeout: 15_000 })
 
-    await page.getByRole('button', { name: 'Abrir palpites' }).click()
-    await expect(
-      page.getByLabel('Status da partida: Palpites abertos').first()
-    ).toBeVisible({ timeout: 20_000 })
+    await openPalpitesAsHost(page)
 
-    await page.getByRole('link', { name: 'Palpite' }).click()
+    await goToPalpitesTab(page)
     await expect(page).toHaveURL(/\/palpites/)
 
-    await page.getByLabel('Vencedor').fill('Brasil')
-    await page.getByLabel('Gols do mandante').fill('2')
-    await page.getByLabel('Gols do visitante').fill('1')
-    await page.getByLabel('Craque da partida').fill('Neymar')
-    await page.getByRole('button', { name: /Salvar palpite/ }).click()
+    await submitBasicPrediction(page)
 
     await expect(
       page.getByRole('status').filter({ hasText: 'Palpite salvo' })
     ).toBeVisible({ timeout: 20_000 })
 
-    await page.getByRole('link', { name: 'Ranking' }).click()
+    await goToRankingTab(page)
     await expect(page).toHaveURL(/\/ranking/)
-    await expect(page.getByText('10 pts', { exact: true })).toBeVisible()
-    await expect(page.getByText(displayName)).toBeVisible()
+    await expect(
+      page.getByLabel('Ranking da sala').getByText('10 pts', { exact: true })
+    ).toBeVisible()
+    await expect(
+      page.getByLabel('Ranking da sala').getByText(displayName)
+    ).toBeVisible()
   })
 })

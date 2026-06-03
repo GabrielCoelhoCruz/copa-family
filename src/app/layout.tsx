@@ -21,6 +21,15 @@ export const metadata: Metadata = {
   title: "Copa Family",
   description:
     "Crie uma sala, chame a família e descubra quem manda na Copa.",
+  applicationName: "Copa Family",
+  appleWebApp: {
+    capable: true,
+    title: "Copa Family",
+    statusBarStyle: "default",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {

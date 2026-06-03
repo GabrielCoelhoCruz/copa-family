@@ -1,13 +1,7 @@
-import { CircleDot, Pause, Radio, Target, Trophy, Users } from "lucide-react"
+import { CircleDot, Pause, Radio, Target, Trophy, Users } from 'lucide-react'
 
-import { Badge } from "@/components/ui/badge"
-
-export type MatchStatus =
-  | "lobby"
-  | "predictions_open"
-  | "live"
-  | "halftime"
-  | "finished"
+import { Badge } from '@/components/ui/badge'
+import type { MatchStatus } from '@/lib/types'
 
 const MATCH_STATUS_VIEW = {
   lobby: {
@@ -35,19 +29,28 @@ const MATCH_STATUS_VIEW = {
     variant: "match-finished",
     Icon: Trophy,
   },
-} as const
+} satisfies Record<
+  MatchStatus,
+  {
+    label: string
+    variant: 'match-lobby' | 'match-predictions' | 'match-live' | 'match-halftime' | 'match-finished'
+    Icon: typeof Users
+  }
+>
 
 type MatchStatusBadgeProps = {
   status: MatchStatus
   className?: string
+  /** Re-mount + entrance animation when status changes */
+  animateOnChange?: boolean
 }
 
-function MatchStatusBadge({ status, className }: MatchStatusBadgeProps) {
+function MatchStatusBadge({ status, className, animateOnChange = false }: MatchStatusBadgeProps) {
   const view = MATCH_STATUS_VIEW[status]
   const Icon = view.Icon
   const LiveIndicator = status === "live" ? CircleDot : Icon
 
-  return (
+  const badge = (
     <Badge
       variant={view.variant}
       className={className}
@@ -55,9 +58,17 @@ function MatchStatusBadge({ status, className }: MatchStatusBadgeProps) {
       aria-label={`Status da partida: ${view.label}`}
       data-match-status={status}
     >
-      <LiveIndicator className={status === "live" ? "animate-pulse" : ""} />
+      <LiveIndicator className={status === 'live' ? 'cf-live-dot' : ''} />
       {view.label}
     </Badge>
+  )
+
+  if (!animateOnChange) return badge
+
+  return (
+    <div key={status} className="cf-status-swap">
+      {badge}
+    </div>
   )
 }
 
