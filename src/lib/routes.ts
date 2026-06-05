@@ -1,6 +1,9 @@
 export const routes = {
   home: '/',
+  designSystem: '/design-system',
   calendario: '/calendario',
+  calendarioComSala: (roomCode: string) =>
+    `/calendario?sala=${encodeURIComponent(roomCode.toUpperCase())}`,
   criarSala: '/criar-sala',
   entrar: '/entrar',
   entrarComCodigo: (roomCode: string) =>

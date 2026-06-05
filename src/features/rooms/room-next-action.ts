@@ -1,3 +1,4 @@
+import { POINTS } from '@/features/points/rules'
 import { routes } from '@/lib/routes'
 import type { MatchStatus } from '@/lib/types'
 
@@ -64,15 +65,15 @@ export function resolveRoomNextAction(
     if (!hasCopaPareEntry) {
       return {
         title: 'Intervalo',
-        description: 'Copa Pare: 30 segundos, +100 pts se participar.',
+        description: `Copa Stop: 30 segundos, +${POINTS.copaPareParticipation} pts (+${POINTS.copaPareUnique} se único).`,
         href: routes.copaPare(roomCode),
-        ctaLabel: 'Jogar Copa Pare',
+        ctaLabel: 'Jogar Copa Stop',
         emphasis: 'party',
         ctaKind: 'link',
       }
     }
     return {
-      title: 'Copa Pare enviado',
+      title: 'Copa Stop enviado',
       description: 'Confira quem está na frente no ranking.',
       href: routes.ranking(roomCode),
       ctaLabel: 'Ver ranking',
@@ -84,7 +85,7 @@ export function resolveRoomNextAction(
   if (status === 'live') {
     return {
       title: 'Bola rolando',
-      description: 'Reaja aos lances na sala e espere o intervalo para Copa Pare.',
+      description: 'Reaja aos lances na sala e espere o intervalo para Copa Stop.',
       href: routes.sala(roomCode),
       ctaLabel: 'Ver jogo da sala',
       emphasis: 'outline',

@@ -1,4 +1,5 @@
 import { POINTS, SCORING_RULES_VERSION } from '@/features/points/rules'
+import type { AdminSupabaseClient } from '@/lib/supabase/service-client'
 
 const SCORING_SOURCES = [
   'match_winner_correct',
@@ -144,7 +145,7 @@ export function calculateMatchPointRows({
 }
 
 export async function applyMatchScoring(
-  supabase: Awaited<ReturnType<typeof import('@/lib/supabase/server').createClient>>,
+  supabase: AdminSupabaseClient,
   {
     roomId,
     matchId,
@@ -191,7 +192,7 @@ export async function applyMatchScoring(
 }
 
 async function getPreviousWinnerStreaks(
-  supabase: Awaited<ReturnType<typeof import('@/lib/supabase/server').createClient>>,
+  supabase: AdminSupabaseClient,
   {
     roomId,
     matchId,

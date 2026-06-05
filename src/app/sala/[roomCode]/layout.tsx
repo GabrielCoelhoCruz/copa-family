@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
-import { RoomShell } from '@/components/room-shell'
+import { RoomShellLive } from '@/components/room-shell-live'
+import { RoomLiveProvider } from '@/features/rooms/live/room-live-provider'
 import { fixtureDisplayTitle } from '@/features/fixtures/format'
 import { canShowCopaPareEventPill } from '@/features/rooms/copa-pare-visibility'
 import { getCopaPareEntry, getRoomContext } from '@/features/rooms/queries'
@@ -67,13 +68,16 @@ export default async function SalaLayout({ children, params }: SalaLayoutProps) 
   })
 
   return (
-    <RoomShell
+    <RoomLiveProvider
+      roomId={context.room.id}
       roomCode={context.room.code}
-      roomName={context.room.name}
-      matchStatus={context.match.status}
-      showCopaPareEvent={showCopaPareEvent}
+      initialMatchId={context.match.id}
+      initialStatus={context.match.status}
+      initialShowCopaPareEvent={showCopaPareEvent}
     >
-      {children}
-    </RoomShell>
+      <RoomShellLive roomCode={context.room.code} roomName={context.room.name}>
+        {children}
+      </RoomShellLive>
+    </RoomLiveProvider>
   )
 }

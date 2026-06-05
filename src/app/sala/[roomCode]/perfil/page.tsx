@@ -4,9 +4,11 @@ import { Medal, User } from 'lucide-react'
 
 import { PageSection } from '@/components/layouts/page-section'
 import { EmptyState } from '@/components/patterns/empty-state'
-import { ParticipantRow } from '@/components/patterns/participant-row'
 import { PointsBreakdownList } from '@/components/patterns/points-breakdown-list'
 import { ShareScoreCard } from '@/components/patterns/share-score-card'
+import { StadiumAvatar } from '@/components/patterns/stadium-avatar'
+import { StadiumLabel } from '@/components/patterns/stadium-label'
+import { avatarColorForName } from '@/lib/avatar-colors'
 import {
   getRanking,
   getUserRoomProfile,
@@ -14,9 +16,9 @@ import {
   getUserWinnerStreakSummary,
 } from '@/features/rooms/queries'
 import { BADGE_DEFINITIONS, getEarnedBadgeIds } from '@/lib/badges'
-import { getAvatarFallback } from '@/lib/avatars'
+import { resolveUserAvatar } from '@/lib/user-avatar'
 import { getInviteUrl } from '@/lib/invite-url'
-import { buildPointsBreakdown, getLockedBadgesCount } from '@/lib/points-breakdown'
+import { buildPointsBreakdown } from '@/lib/points-breakdown'
 import { routes } from '@/lib/routes'
 import { withRankingPositions } from '@/lib/ranking'
 import { getGuestUserId } from '@/lib/session'
@@ -52,7 +54,6 @@ export default async function PerfilPage({ params }: PerfilPageProps) {
 
   const earned = getEarnedBadgeIds(profile.sources)
   const breakdown = buildPointsBreakdown(profile.pointRows)
-  const lockedBadges = getLockedBadgesCount(earned.size)
   const streak = await getUserWinnerStreakSummary(context.room.id, userId)
   const ranking = withRankingPositions(await getRanking(context.room.id))
   const myRanking = ranking.find((entry) => entry.userId === userId)
@@ -66,13 +67,21 @@ export default async function PerfilPage({ params }: PerfilPageProps) {
 
   return (
     <>
-      <ParticipantRow
-        name={profile.displayName}
-        fallback={getAvatarFallback(profile.avatarKey, profile.displayName)}
-        role={profile.role}
-        points={profile.points}
-        isOnline
-      />
+      <div className="flex items-center gap-3.5">
+        <StadiumAvatar
+          initial={profile.displayName.slice(0, 1)}
+          color={avatarColorForName(profile.displayName)}
+          photoUrl={profile.avatarPhotoUrl}
+          size={64}
+          ring="var(--cf-gold)"
+        />
+        <div className="min-w-0 flex-1">
+          <div className="font-heading text-[21px] font-extrabold">{profile.displayName}</div>
+          <div className="mt-1 inline-flex items-center gap-1.5 rounded-xl bg-[rgba(230,197,119,0.13)] px-2.5 py-1 text-xs font-bold text-[var(--cf-gold)]">
+            {profile.role === 'owner' ? 'Organizador' : 'Participante'}
+          </div>
+        </div>
+      </div>
 
       <ShareScoreCard
         displayName={profile.displayName}
@@ -92,46 +101,38 @@ export default async function PerfilPage({ params }: PerfilPageProps) {
         <PointsBreakdownList rows={breakdown} className="mt-3" />
       </PageSection>
 
-      <PageSection title="Medalhas" titleId="badges-heading">
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Medal className="size-4 text-brand-trophy" aria-hidden />
-          {lockedBadges > 0 ? (
-            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-              Faltam {lockedBadges}
-            </span>
-          ) : (
-            <span className="rounded-full bg-brand-trophy/15 px-2 py-0.5 text-xs font-semibold text-brand-trophy">
-              Coleção completa
-            </span>
-          )}
-        </p>
-        <ul className="mt-3 flex flex-col gap-2">
-          {BADGE_DEFINITIONS.map((badge) => {
-            const isEarned = earned.has(badge.id)
-            return (
-              <li
-                key={badge.id}
+      <StadiumLabel>
+        Medalhas · {earned.size}/{BADGE_DEFINITIONS.length}
+      </StadiumLabel>
+      <ul className="grid grid-cols-3 gap-2.5">
+        {BADGE_DEFINITIONS.map((badge) => {
+          const isEarned = earned.has(badge.id)
+          return (
+            <li
+              key={badge.id}
+              className={cn(
+                'rounded-2xl border px-1.5 py-3.5 text-center',
+                isEarned
+                  ? 'border-[rgba(230,197,119,0.35)] bg-[rgba(230,197,119,0.1)]'
+                  : 'border-[var(--cf-card-border-soft)] bg-white/[0.03] opacity-50'
+              )}
+            >
+              <div
                 className={cn(
-                  'rounded-xl border px-3 py-2 text-sm transition-colors',
-                  isEarned
-                    ? 'border-brand-trophy/40 bg-brand-trophy/10'
-                    : 'border-dashed border-border/60 bg-muted/20 opacity-75'
+                  'mx-auto mb-2 flex size-11 items-center justify-center rounded-full',
+                  isEarned ? 'cf-bg-gold-gradient' : 'bg-white/[0.06]'
                 )}
               >
-                <p className="font-semibold">
-                  {badge.label}
-                  {isEarned ? (
-                    <span className="ml-2 text-xs font-bold text-brand-trophy">
-                      Desbloqueada
-                    </span>
-                  ) : null}
-                </p>
-                <p className="text-muted-foreground">{badge.description}</p>
-              </li>
-            )
-          })}
-        </ul>
-      </PageSection>
+                <Medal
+                  className={cn('size-5', isEarned ? 'text-[var(--cf-ink)]' : 'text-[var(--cf-faint)]')}
+                  aria-hidden
+                />
+              </div>
+              <p className="text-[11px] font-bold leading-tight text-white">{badge.label}</p>
+            </li>
+          )
+        })}
+      </ul>
 
       <Link
         href={routes.sala(context.room.code)}

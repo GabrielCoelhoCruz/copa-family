@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import type { CatalogFixtureView } from '@/features/fixtures/catalog-view'
+import { getFixtureKickoffDateKey } from '@/features/fixtures/format'
 import {
+  getFixtureDateSectionId,
   groupFixturesByKickoffDate,
-  groupTeamsByGroup,
-} from '@/features/fixtures/queries'
+  pickCalendarFocusDateKey,
+} from '@/features/fixtures/calendar-groups'
+import { groupTeamsByGroup } from '@/features/fixtures/queries'
 import type { DbFootballFixture, DbFootballTeam } from '@/lib/types'
 
 function makeFixture(
@@ -72,6 +75,46 @@ describe('groupFixturesByKickoffDate', () => {
     expect(groups).toHaveLength(2)
     expect(groups[0]?.fixtures).toHaveLength(2)
     expect(groups[1]?.fixtures).toHaveLength(1)
+    expect(groups[0]?.shortLabel).toBeTruthy()
+    expect(getFixtureDateSectionId(groups[0]!.dateKey)).toBe('dia-2026-06-15')
+  })
+
+  it('groups kickoff by calendar day in São Paulo', () => {
+    expect(getFixtureKickoffDateKey('2026-06-16T02:30:00.000Z')).toBe('2026-06-15')
+
+    const groups = groupFixturesByKickoffDate(
+      [
+        makeCatalogFixture({
+          id: 'late',
+          kickoff_at: '2026-06-16T02:30:00.000Z',
+        }),
+      ],
+      { todayKey: '2026-06-15' }
+    )
+
+    expect(groups).toHaveLength(1)
+    expect(groups[0]?.dateKey).toBe('2026-06-15')
+    expect(groups[0]?.isToday).toBe(true)
+    expect(groups[0]?.shortLabel).toBe('Hoje')
+  })
+})
+
+describe('pickCalendarFocusDateKey', () => {
+  it('prefers today, then the next day, then the previous day', () => {
+    const groups = groupFixturesByKickoffDate([
+      makeCatalogFixture({ id: '1', kickoff_at: '2026-06-10T18:00:00.000Z' }),
+      makeCatalogFixture({ id: '2', kickoff_at: '2026-06-20T18:00:00.000Z' }),
+    ])
+
+    expect(pickCalendarFocusDateKey(groups, '2026-06-15')).toBe('2026-06-20')
+    expect(pickCalendarFocusDateKey(groups, '2026-06-20')).toBe('2026-06-20')
+    expect(pickCalendarFocusDateKey(groups, '2026-06-25')).toBe('2026-06-20')
+  })
+})
+
+describe('getFixtureDateSectionId', () => {
+  it('uses a stable anchor for unknown dates', () => {
+    expect(getFixtureDateSectionId('sem-data')).toBe('dia-sem-data')
   })
 })
 

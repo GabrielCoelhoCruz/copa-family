@@ -24,6 +24,16 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        stadium:
+          "home-cta-gold h-14 min-h-14 rounded-full border-0 px-[22px] text-base font-extrabold shadow-none disabled:pointer-events-none disabled:opacity-100 disabled:brightness-[0.58] disabled:saturate-[0.85]",
+        "stadium-ghost":
+          "home-cta-ghost h-14 min-h-14 rounded-full px-[22px] text-base font-extrabold shadow-none",
+        "stadium-coral":
+          "h-14 min-h-14 rounded-full border-0 bg-gradient-to-b from-[#ff8073] to-[#ff5a4c] px-[22px] text-base font-extrabold text-white shadow-[0_12px_26px_-10px_rgba(255,90,76,0.6)] hover:brightness-105 disabled:pointer-events-none disabled:opacity-100 disabled:brightness-[0.58] disabled:saturate-[0.85]",
+        "stadium-sky":
+          "h-14 min-h-14 rounded-full border-0 bg-gradient-to-b from-[#6fc0f5] to-[#3aa0e8] px-[22px] text-base font-extrabold text-[#08263a] shadow-[0_12px_26px_-10px_rgba(58,160,232,0.5)] hover:brightness-105",
+        "stadium-dark":
+          "h-10 rounded-full border border-[var(--cf-card-border-soft)] bg-black/28 px-4 text-sm font-bold text-white hover:bg-black/36",
       },
       size: {
         default:

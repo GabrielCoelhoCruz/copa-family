@@ -5,6 +5,8 @@ import { PageSection } from '@/components/layouts/page-section'
 import { PageStack } from '@/components/layouts/page-stack'
 import { SiteShell } from '@/components/layouts/site-shell'
 import { CatalogAdminActions } from '@/components/patterns/catalog-admin-actions'
+import { PlayerPortraitAdminActions } from '@/components/patterns/player-portrait-admin-actions'
+import { getPlayerPortraitStats } from '@/features/players/queries'
 import { EmptyState } from '@/components/patterns/empty-state'
 import { getCatalogAdminSnapshot } from '@/features/fixtures/admin-queries'
 import { formatSyncTime } from '@/features/fixtures/format'
@@ -20,8 +22,12 @@ export default async function AdminCatalogoPage() {
   assertAdminMetricsPageEnabled()
 
   let snapshot: Awaited<ReturnType<typeof getCatalogAdminSnapshot>>
+  let playerStats = { total: 0, withPhoto: 0 }
   try {
-    snapshot = await getCatalogAdminSnapshot()
+    ;[snapshot, playerStats] = await Promise.all([
+      getCatalogAdminSnapshot(),
+      getPlayerPortraitStats(),
+    ])
   } catch {
     return (
       <SiteShell ambient="none" mainClassName="p-[var(--site-page-px)] pt-6">
@@ -56,6 +62,10 @@ export default async function AdminCatalogoPage() {
     { label: 'Sedes', value: snapshot.venueCount },
     { label: 'Grupos', value: snapshot.groupCount },
     { label: 'Bandeiras', value: snapshot.teamsWithBadge },
+    {
+      label: 'Retratos (jogadores)',
+      value: `${playerStats.withPhoto}/${playerStats.total}`,
+    },
   ]
 
   return (
@@ -171,12 +181,20 @@ export default async function AdminCatalogoPage() {
           </ul>
         </PageSection>
 
-        <PageSection title="Ações" titleId="catalog-actions" variant="elevated">
+        <PageSection title="Catálogo de jogos" titleId="catalog-actions" variant="elevated">
           <p className="mb-3 text-sm text-muted-foreground">
             Sincroniza jogos e seleções via RapidAPI WC26 (servidor). Bandeiras usam
             flagcdn sem quota externa.
           </p>
           <CatalogAdminActions syncToken={syncToken} />
+        </PageSection>
+
+        <PageSection title="Retratos de jogadores" titleId="player-portraits" variant="elevated">
+          <p className="mb-3 text-sm text-muted-foreground">
+            Lista curada em data/world-cup/featured-players.json (24 jogadores). Fotos
+            vêm da TheSportsDB e são salvas no bucket player-portraits.
+          </p>
+          <PlayerPortraitAdminActions syncToken={syncToken} />
         </PageSection>
       </PageStack>
     </SiteShell>

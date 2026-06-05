@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 type StickyFormSubmitProps = {
   children: ReactNode
   className?: string
-  /** Sticks to the bottom of the sala scroll area (above tab bar) */
+  /** Sticks above the sala bottom tab bar inside the scroll area */
   withSalaNav?: boolean
 }
 
@@ -14,28 +14,47 @@ function StickyFormSubmit({
   className,
   withSalaNav = false,
 }: StickyFormSubmitProps) {
+  if (withSalaNav) {
+    return (
+      <>
+        <div
+          className={cn(
+            'sticky z-20 mt-auto shrink-0',
+            '-mx-[var(--site-page-px)] px-[var(--site-page-px)]',
+            'pt-4 pb-3 cf-sticky-footer',
+            className
+          )}
+          style={{ bottom: 0 }}
+        >
+          {children}
+        </div>
+        <div
+          aria-hidden
+          className="pointer-events-none shrink-0"
+          style={{ height: 'var(--sticky-submit-clearance)' }}
+        />
+      </>
+    )
+  }
+
   return (
     <>
       <div
         className={cn(
-          'sticky z-10 mt-2 border-t border-border/80 bg-background/95 pt-3 backdrop-blur-md',
+          'sticky z-20 mt-2 shrink-0 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] cf-sticky-footer',
           className
         )}
-        style={{
-          bottom: withSalaNav ? 0 : 'env(safe-area-inset-bottom)',
-        }}
+        style={{ bottom: 'env(safe-area-inset-bottom)' }}
       >
         {children}
       </div>
-      {/* Reserves scroll space so fields are not hidden under the sticky bar */}
       <div
         aria-hidden
-        className={cn(
-          'pointer-events-none h-0 w-full',
-          withSalaNav
-            ? 'pb-[var(--sticky-submit-clearance)]'
-            : 'pb-[calc(var(--sticky-submit-clearance)+env(safe-area-inset-bottom))]'
-        )}
+        className="pointer-events-none shrink-0"
+        style={{
+          height:
+            'calc(var(--sticky-submit-clearance) + env(safe-area-inset-bottom))',
+        }}
       />
     </>
   )

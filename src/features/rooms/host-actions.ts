@@ -30,7 +30,7 @@ export function getPrimaryHostAction(status: MatchStatus): HostAction | null {
     live: {
       nextStatus: 'halftime',
       label: 'Abrir intervalo',
-      description: 'Ative o Copa Pare e o momento de conversa.',
+      description: 'Ative o Copa Stop e o momento de conversa.',
       variant: 'celebrate',
       Icon: Pause,
     },
@@ -66,8 +66,8 @@ export function getHostNextStepHint(status: MatchStatus): string {
   const hints: Record<MatchStatus, string> = {
     lobby: 'Convide pelo QR e abra os palpites.',
     predictions_open: 'Confira quem já palpitou e inicie o jogo.',
-    live: 'No intervalo, abra o Copa Pare para +100 pts.',
-    halftime: 'Copa Pare ativo. Depois retome ou encerre.',
+    live: 'No intervalo, abra o Copa Stop (+50 pts).',
+    halftime: 'Copa Stop ativo. Retome ou sorteie outra letra.',
     finished: 'Informe o resultado e veja o ranking final.',
   }
   return hints[status]

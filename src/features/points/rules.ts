@@ -3,7 +3,8 @@ export const POINTS = {
   winnerCorrect: 50,
   playerOfMatchCorrect: 50,
   exactScore: 100,
-  copaPareParticipation: 100,
+  copaPareParticipation: 50,
+  copaPareUnique: 10,
   streakMultiplier: 1.5,
 } as const
 

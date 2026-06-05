@@ -18,7 +18,7 @@ describe('resolveRoomNextAction', () => {
     expect(action.href).toContain('/palpites')
   })
 
-  it('suggests Copa Pare during halftime when not played', () => {
+  it('suggests Copa Stop during halftime when not played', () => {
     const action = resolveRoomNextAction({
       roomCode: 'ABC',
       status: 'halftime',
@@ -29,7 +29,7 @@ describe('resolveRoomNextAction', () => {
       memberCount: 4,
     })
 
-    expect(action.ctaLabel).toBe('Jogar Copa Pare')
+    expect(action.ctaLabel).toBe('Jogar Copa Stop')
   })
 
   it('routes to ranking when match is finished', () => {

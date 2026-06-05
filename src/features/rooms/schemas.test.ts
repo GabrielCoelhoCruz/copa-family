@@ -6,12 +6,14 @@ import {
   predictionSchema,
 } from '@/features/rooms/schemas'
 
+const samplePlayerId = '00000000-0000-4000-8000-000000000099'
+
 describe('joinRoomSchema', () => {
   it('aceita código em minúsculas e normaliza para maiúsculas', () => {
     const result = joinRoomSchema.safeParse({
       roomCode: 'abc123',
       displayName: 'Ana',
-      avatarKey: 'lion',
+      avatarPlayerId: samplePlayerId,
     })
     expect(result.success).toBe(true)
     if (result.success) {
@@ -23,7 +25,16 @@ describe('joinRoomSchema', () => {
     const result = joinRoomSchema.safeParse({
       roomCode: 'AB',
       displayName: 'Ana',
-      avatarKey: 'lion',
+      avatarPlayerId: samplePlayerId,
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('exige avatarPlayerId uuid', () => {
+    const result = joinRoomSchema.safeParse({
+      roomCode: 'ABC123',
+      displayName: 'Ana',
+      avatarPlayerId: 'not-a-uuid',
     })
     expect(result.success).toBe(false)
   })
@@ -33,7 +44,7 @@ describe('createRoomSchema', () => {
   it('exige nome e sala com tamanho mínimo', () => {
     const result = createRoomSchema.safeParse({
       displayName: 'Jo',
-      avatarKey: 'lion',
+      avatarPlayerId: samplePlayerId,
       roomName: 'X',
     })
     expect(result.success).toBe(false)

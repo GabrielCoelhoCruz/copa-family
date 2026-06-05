@@ -8,7 +8,7 @@ describe('actionStateFromZod', () => {
     const parsed = joinRoomSchema.safeParse({
       roomCode: 'AB',
       displayName: 'Ana',
-      avatarKey: 'lion',
+      avatarPlayerId: '00000000-0000-4000-8000-000000000099',
     })
 
     expect(parsed.success).toBe(false)

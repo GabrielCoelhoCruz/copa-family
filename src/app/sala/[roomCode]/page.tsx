@@ -7,11 +7,13 @@ import { SuccessBanner } from '@/components/success-banner'
 import { EmptyState } from '@/components/patterns/empty-state'
 import { FixturePicker } from '@/components/patterns/fixture-picker'
 import { HostGameControl } from '@/components/patterns/host-game-control'
-import { ParticipantRow } from '@/components/patterns/participant-row'
 import { QuickReactionBar } from '@/components/patterns/quick-reaction-bar'
 import { RoomMatchHero } from '@/components/patterns/room-match-hero'
+import { RoomMatchHistoryList } from '@/components/patterns/room-match-history-list'
+import { RoomMemberBoard } from '@/components/patterns/room-member-board'
 import { RoomProgressLine } from '@/components/patterns/room-progress-line'
 import { RoomCodeDisplay } from '@/components/patterns/room-code-display'
+import { StadiumLabel } from '@/components/patterns/stadium-label'
 import { ApiSportsGameWidgetPanel } from '@/components/api-sports/api-sports-game-widget-panel'
 import { buttonVariants } from '@/components/ui/button'
 import { fixtureDisplayTitle } from '@/features/fixtures/format'
@@ -25,10 +27,10 @@ import { canAssumeRoom } from '@/features/rooms/host-resilience'
 import {
   getRoomContext,
   getRoomDashboardData,
-  getRoomMatchHistory,
+  getRoomMatchHistorySummaries,
+  getRoomMemberBoard,
 } from '@/features/rooms/queries'
 import { ANALYTICS_EVENTS, trackEvent } from '@/lib/analytics'
-import { getAvatarFallback } from '@/lib/avatars'
 import { getInviteUrl } from '@/lib/invite-url'
 import { routes } from '@/lib/routes'
 import { getGuestUserId } from '@/lib/session'
@@ -44,6 +46,7 @@ type SalaGameBoardPageProps = {
     hostAssumido?: string
     coHost?: string
     proximoJogo?: string
+    letra?: string
   }>
 }
 
@@ -56,7 +59,7 @@ export default async function SalaGameBoardPage({
   searchParams,
 }: SalaGameBoardPageProps) {
   const { roomCode } = await params
-  const { qr, statusErro, resultado, hostAssumido, coHost, proximoJogo } =
+  const { qr, statusErro, resultado, hostAssumido, coHost, proximoJogo, letra } =
     await searchParams
   const [context, userId] = await Promise.all([
     getRoomContext(roomCode),
@@ -67,7 +70,7 @@ export default async function SalaGameBoardPage({
     notFound()
   }
 
-  const { room, match, fixture, members, pointsByUser } = context
+  const { room, match, fixture, members } = context
   const inviteUrl = await getInviteUrl(room.code)
   const currentMember =
     userId != null ? members.find((member) => member.user_id === userId) : null
@@ -78,7 +81,10 @@ export default async function SalaGameBoardPage({
   const dashboard = await getRoomDashboardData(context, userId, isHost)
   const nextMatchFixtures =
     isHost && match.status === 'finished' ? await getWorldCupCatalogFixtures() : []
-  const matchHistory = await getRoomMatchHistory(room.id)
+  const [memberBoard, matchHistorySummaries] = await Promise.all([
+    getRoomMemberBoard(context, match.id, match.status, userId),
+    getRoomMatchHistorySummaries(room.id, match.id, members),
+  ])
 
   const hasMatchResult =
     match.winner != null &&
@@ -115,28 +121,6 @@ export default async function SalaGameBoardPage({
         fixture={fixture}
       />
 
-      {matchHistory.length > 1 ? (
-        <PageSection
-          title="Histórico da sala"
-          titleId="historico-sala-heading"
-          description="A sala guarda os jogos anteriores e soma o ranking da família."
-        >
-          <ul className="mt-3 flex flex-col gap-2 text-sm">
-            {matchHistory.slice(1, 4).map((historyMatch) => (
-              <li
-                key={historyMatch.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-card/70 px-3 py-2"
-              >
-                <span className="font-semibold">{historyMatch.title}</span>
-                <span className="text-xs font-medium text-muted-foreground">
-                  {historyMatch.status === 'finished' ? 'encerrado' : historyMatch.status}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </PageSection>
-      ) : null}
-
       {fixture ? (
         <ApiSportsGameWidgetPanel
           providerFixtureId={fixture.provider_fixture_id}
@@ -157,7 +141,8 @@ export default async function SalaGameBoardPage({
         <QuickReactionBar matchId={match.id} roomId={room.id} />
       ) : null}
 
-      <PageSection title={`Quem está jogando (${members.length})`} titleId="participants-heading">
+      <section aria-labelledby="participants-heading" className="space-y-2.5">
+        <StadiumLabel>Na sala · {members.length}</StadiumLabel>
         {members.length === 0 ? (
           <EmptyState
             icon={<Users className="size-6" />}
@@ -165,24 +150,18 @@ export default async function SalaGameBoardPage({
             description="Convide a família pelo link abaixo."
           />
         ) : (
-          <ul className="flex flex-col gap-2">
-            {members.map((member) => (
-              <li key={member.id}>
-                <ParticipantRow
-                  name={member.users.display_name}
-                  fallback={getAvatarFallback(
-                    member.users.avatar_key,
-                    member.users.display_name
-                  )}
-                  role={member.role}
-                  points={pointsByUser.get(member.user_id) ?? 0}
-                  isOnline={member.user_id === userId}
-                />
-              </li>
-            ))}
-          </ul>
+          <RoomMemberBoard
+            rows={memberBoard}
+            predictionCount={dashboard.stats.predictionCount}
+            memberCount={dashboard.stats.memberCount}
+            showPredictionProgress={
+              match.status === 'lobby' || match.status === 'predictions_open'
+            }
+          />
         )}
-      </PageSection>
+      </section>
+
+      <RoomMatchHistoryList items={matchHistorySummaries} />
 
       {showInvite ? (
         <div id="convite-sala">
@@ -232,6 +211,13 @@ export default async function SalaGameBoardPage({
         />
       ) : null}
 
+      {letra === '1' ? (
+        <SuccessBanner
+          title="Nova letra sorteada"
+          description="As respostas do intervalo foram apagadas. A família pode jogar Copa Stop de novo."
+        />
+      ) : null}
+
       {canAssumeHost ? (
         <PageSection
           title="Anfitrião ausente?"
@@ -263,6 +249,8 @@ export default async function SalaGameBoardPage({
           memberCount={dashboard.stats.memberCount}
           predictionCount={dashboard.stats.predictionCount}
           hasMatchResult={hasMatchResult}
+          copaPareCategory={match.copa_pare_category}
+          copaPareLetter={match.copa_pare_letter}
         />
       ) : null}
 
@@ -323,7 +311,7 @@ export default async function SalaGameBoardPage({
           <form action={createNextMatchAction} className="mt-3 flex flex-col gap-3">
             <input type="hidden" name="roomId" value={room.id} />
             <input type="hidden" name="roomCode" value={room.code} />
-            <FixturePicker fixtures={nextMatchFixtures} />
+            <FixturePicker fixtures={nextMatchFixtures} preferUpcoming />
             <button
               type="submit"
               className={cn(

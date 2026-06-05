@@ -14,11 +14,24 @@
 | Surface | Route | Behavior |
 | --- | --- | --- |
 | Public calendar | `/calendario` | Summary strip (jogos, grupos, sedes, countdown); rich fixture cards with flags + **Criar sala** per game |
-| Create room | `/criar-sala?fixture=<uuid>` | Pre-selects fixture from calendar (`routes.criarSalaComFixture`) |
+| Create room | `/criar-sala?fixture=<uuid>` | Pre-selects fixture from calendar; `FixturePicker` shows today’s games + modal (day / phase / group) |
 | Room hero | `/sala/[code]` | `TeamVersusStrip` + kickoff / group / venue; single contextual CTA from `RoomNextAction` |
 | Admin catalog | `/admin/catalogo` | Gated by `ENABLE_ADMIN_METRICS=true`; counts, last sync, env OK/missing (no secret values); server actions sync + flagcdn enrich |
 
 Flow: **Calendário → Criar sala (pré-selecionado) → Sala**.
+
+## Player portraits (avatars)
+
+| Step | Command / surface |
+| --- | --- |
+| Seed metadata | `npm run seed:players` or admin **Importar lista** |
+| Sync photos | `npm run sync:players` or admin **Sincronizar retratos** |
+| User picks player | `/criar-sala`, `/entrar` — `PlayerAvatarPicker` reads `football_players.photo_url` only |
+| Storage | Bucket `player-portraits`, path `{season}/{slug}.{ext}` |
+
+Curated list: `data/world-cup/featured-players.json` (24 players). New guests use `users.avatar_player_id` (no emoji picker).
+
+Migration: `007_football_players.sql`.
 
 ## Env
 

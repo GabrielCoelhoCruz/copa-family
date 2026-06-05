@@ -1,121 +1,115 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
+import { Check } from 'lucide-react'
 
-import { AvatarPicker } from '@/components/avatar-picker'
 import { FieldError } from '@/components/field-error'
+import { PlayerAvatarPicker } from '@/components/player-avatar-picker'
+import { StadiumInput } from '@/components/patterns/stadium-input'
+import { StadiumLabel } from '@/components/patterns/stadium-label'
 import { StickyFormSubmit } from '@/components/sticky-form-submit'
 import { joinRoomAction, type ActionState } from '@/features/rooms/actions'
 import { hasFieldErrors } from '@/features/rooms/action-state'
+import type { SelectablePlayer } from '@/features/players/types'
 import { fieldDescribedBy } from '@/lib/form-a11y'
-import { RoomCodeInput } from '@/components/patterns/room-code-input'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 const initialState: ActionState = {}
 
 type JoinRoomFormProps = {
   defaultRoomCode?: string
+  players: SelectablePlayer[]
 }
 
-function JoinRoomForm({ defaultRoomCode = '' }: JoinRoomFormProps) {
+function JoinRoomForm({ defaultRoomCode = '', players }: JoinRoomFormProps) {
   const [state, formAction, isPending] = useActionState(joinRoomAction, initialState)
   const showFormError = Boolean(state.error && !hasFieldErrors(state))
   const roomCodeError = state.fieldErrors?.roomCode
   const displayNameError = state.fieldErrors?.displayName
-  const avatarError = state.fieldErrors?.avatarKey
+  const avatarError = state.fieldErrors?.avatarPlayerId
+  const [avatarPlayerId, setAvatarPlayerId] = useState<string | null>(null)
+  const canSubmit = players.length > 0 && avatarPlayerId != null
 
   return (
-    <Card className="border-border/80 bg-card/95 shadow-lg shadow-brand-field/5">
-      <CardContent className="pt-4">
-        <form
-          action={formAction}
-          className="flex flex-col gap-5"
-          aria-describedby={showFormError ? 'join-room-error' : undefined}
+    <form
+      action={formAction}
+      className="flex min-h-0 flex-1 flex-col"
+      aria-describedby={showFormError ? 'join-room-error' : undefined}
+    >
+      <div className="flex flex-1 flex-col gap-5 pb-4">
+        <StadiumLabel>Seu nome e avatar</StadiumLabel>
+        <PlayerAvatarPicker
+          players={players}
+          onSelectedChange={setAvatarPlayerId}
+          aria-labelledby="join-avatar-label"
+          aria-describedby={
+            avatarError ? 'join-avatar-hint join-avatar-error' : 'join-avatar-hint'
+          }
+          aria-invalid={avatarError ? true : undefined}
+        />
+        <span id="join-avatar-label" className="sr-only">
+          Seu jogador
+        </span>
+        <FieldError id="join-avatar-error" message={avatarError} />
+        <StadiumInput
+          id="displayName"
+          name="displayName"
+          required
+          placeholder="Seu nome"
+          autoComplete="nickname"
+          hasError={Boolean(displayNameError)}
+          aria-invalid={displayNameError ? true : undefined}
+          aria-describedby={fieldDescribedBy(
+            'displayName-hint',
+            'displayName-error',
+            displayNameError
+          )}
+        />
+        <FieldError id="displayName-error" message={displayNameError} />
+
+        <StadiumLabel>Código da sala</StadiumLabel>
+        <StadiumInput
+          id="roomCode"
+          name="roomCode"
+          defaultValue={defaultRoomCode}
+          maxLength={6}
+          minLength={6}
+          required
+          placeholder="COPA-XXXX"
+          className="font-mono uppercase tracking-widest"
+          hasError={Boolean(roomCodeError)}
+          aria-invalid={roomCodeError ? true : undefined}
+          aria-describedby={fieldDescribedBy(
+            'roomCode-hint',
+            'roomCode-error',
+            roomCodeError
+          )}
+        />
+        <FieldError id="roomCode-error" message={roomCodeError} />
+
+        {showFormError ? (
+          <p
+            id="join-room-error"
+            className="text-sm font-semibold text-[var(--cf-coral)]"
+            role="alert"
+          >
+            {state.error}
+          </p>
+        ) : null}
+      </div>
+
+      <StickyFormSubmit className="cf-sticky-footer -mx-[var(--site-page-px)] px-[var(--site-page-px)] pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+        <Button
+          type="submit"
+          variant="stadium"
+          className="w-full"
+          disabled={isPending || !canSubmit}
         >
-          <div className="space-y-2">
-            <Label htmlFor="roomCode">Código da sala</Label>
-            <p id="roomCode-hint" className="text-xs text-muted-foreground">
-              6 letras, sem espaços
-            </p>
-            <RoomCodeInput
-              id="roomCode"
-              name="roomCode"
-              defaultValue={defaultRoomCode}
-              maxLength={6}
-              minLength={6}
-              required
-              aria-invalid={roomCodeError ? true : undefined}
-              aria-describedby={fieldDescribedBy(
-                'roomCode-hint',
-                'roomCode-error',
-                roomCodeError
-              )}
-            />
-            <FieldError id="roomCode-error" message={roomCodeError} />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="displayName">Seu nome</Label>
-            <p id="displayName-hint" className="text-xs text-muted-foreground">
-              Como aparece no ranking
-            </p>
-            <Input
-              id="displayName"
-              name="displayName"
-              required
-              autoComplete="nickname"
-              aria-invalid={displayNameError ? true : undefined}
-              aria-describedby={fieldDescribedBy(
-                'displayName-hint',
-                'displayName-error',
-                displayNameError
-              )}
-            />
-            <FieldError id="displayName-error" message={displayNameError} />
-          </div>
-
-          <div className="space-y-2">
-            <Label id="avatar-label">Seu avatar</Label>
-            <p id="avatar-hint" className="text-xs text-muted-foreground">
-              Escolha um para a sala
-            </p>
-            <AvatarPicker
-              aria-labelledby="avatar-label"
-              aria-describedby={
-                avatarError ? 'avatar-hint avatar-error' : 'avatar-hint'
-              }
-              aria-invalid={avatarError ? true : undefined}
-            />
-            <FieldError id="avatar-error" message={avatarError} />
-          </div>
-
-          {showFormError ? (
-            <p
-              id="join-room-error"
-              className="text-sm font-medium text-destructive"
-              role="alert"
-            >
-              {state.error}
-            </p>
-          ) : null}
-
-          <StickyFormSubmit>
-            <Button
-              type="submit"
-              variant="party"
-              size="lg"
-              className="min-h-12 w-full"
-              disabled={isPending}
-            >
-              {isPending ? 'Entrando...' : 'Entrar na sala'}
-            </Button>
-          </StickyFormSubmit>
-        </form>
-      </CardContent>
-    </Card>
+          <Check className="size-[19px]" aria-hidden />
+          {isPending ? 'Entrando...' : 'Entrar na sala'}
+        </Button>
+      </StickyFormSubmit>
+    </form>
   )
 }
 

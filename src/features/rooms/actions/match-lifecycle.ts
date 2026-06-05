@@ -8,16 +8,20 @@ import {
   trackEvent,
   type AnalyticsEventName,
 } from '@/lib/analytics'
+import { applyCopaPareUniqueScoring } from '@/features/points/score-copa-pare'
 import { applyMatchScoring } from '@/features/points/score-match'
+import {
+  drawCopaPareCategory,
+  drawCopaPareLetter,
+} from '@/lib/copa-pare-categories'
 import {
   canTransitionMatchStatus,
   getInvalidTransitionMessage,
 } from '@/features/rooms/match-status'
 import {
   canControlRoom,
-  roomMembershipRole,
+  fetchRoomMemberRole,
   trackPermissionDenied,
-  type ActionMembership,
 } from '@/features/rooms/actions/permissions'
 import { matchResultSchema } from '@/features/rooms/schemas'
 import {
@@ -107,7 +111,7 @@ export async function updateMatchStatusAction(
     return { error: 'Sala inválida para esta partida.' }
   }
 
-  const role = await getUserRoomRole(supabase, roomId, userId)
+  const role = await fetchRoomMemberRole(supabase, roomId, userId)
   if (!canControlRoom(role)) {
     await trackPermissionDenied({
       roomId,
@@ -129,9 +133,20 @@ export async function updateMatchStatusAction(
   if (status === 'halftime') timestamps.halftime_started_at = new Date().toISOString()
   if (status === 'finished') timestamps.finished_at = new Date().toISOString()
 
+  const matchUpdate: Record<string, string | null> = {
+    status,
+    ...timestamps,
+  }
+
+  if (status === 'halftime') {
+    const category = drawCopaPareCategory()
+    matchUpdate.copa_pare_category = category.value
+    matchUpdate.copa_pare_letter = drawCopaPareLetter()
+  }
+
   const { error } = await supabase
     .from('matches')
-    .update({ status, ...timestamps })
+    .update(matchUpdate)
     .eq('id', matchId)
 
   if (error) {
@@ -142,6 +157,17 @@ export async function updateMatchStatusAction(
     .from('rooms')
     .update({ last_host_action_at: new Date().toISOString() })
     .eq('id', roomId)
+
+  if (current === 'halftime' && (status === 'live' || status === 'finished')) {
+    try {
+      await applyCopaPareUniqueScoring(supabase, { roomId, matchId })
+    } catch {
+      return {
+        error:
+          'Status atualizado, mas não foi possível calcular respostas únicas do Copa Stop. Tente retomar ou encerrar de novo.',
+      }
+    }
+  }
 
   const statusEvents: Partial<Record<MatchStatus, AnalyticsEventName>> = {
     live: ANALYTICS_EVENTS.matchStarted,
@@ -199,7 +225,7 @@ export async function submitMatchResultAction(
     return { error: 'Sala inválida para este resultado.' }
   }
 
-  const role = await getUserRoomRole(supabase, parsed.data.roomId, userId)
+  const role = await fetchRoomMemberRole(supabase, parsed.data.roomId, userId)
   if (!canControlRoom(role)) {
     await trackPermissionDenied({
       roomId: parsed.data.roomId,
@@ -288,17 +314,4 @@ export async function submitMatchResultAction(
   })
 
   redirect(`${routes.sala(parsed.data.roomCode)}?resultado=1`)
-}
-
-async function getUserRoomRole(
-  supabase: ReturnType<typeof createAdminClient>,
-  roomId: string,
-  userId: string | null
-) {
-  const { data } = await supabase
-    .from('room_members')
-    .select('user_id, role')
-    .eq('room_id', roomId)
-
-  return roomMembershipRole((data ?? []) as ActionMembership[], userId)
 }

@@ -3,8 +3,12 @@ import { cache } from 'react'
 import { withRankingPositions } from '@/lib/ranking'
 import { createClient } from '@/lib/supabase/server'
 import { getFixtureById } from '@/features/fixtures/queries'
+import { photoUrlFromUser, type UserWithPlayerPortrait } from '@/lib/player-portrait'
 import type { DbMatch, DbRoom, DbRoomMember } from '@/lib/types'
 
+import { avatarColorForName } from '@/lib/avatar-colors'
+
+import { buildMemberStatusLabel } from './member-status-label'
 import { resolveRoomNextAction, type RoomNextAction } from './room-next-action'
 
 export async function getRoomByCode(roomCode: string) {
@@ -24,7 +28,7 @@ export async function getCurrentMatch(roomId: string) {
   const { data, error } = await supabase
     .from('matches')
     .select(
-      'id, room_id, title, status, fixture_id, home_score, away_score, winner, player_of_match'
+      'id, room_id, title, status, fixture_id, home_score, away_score, winner, player_of_match, copa_pare_category, copa_pare_letter, halftime_started_at'
     )
     .eq('room_id', roomId)
     .order('created_at', { ascending: false })
@@ -40,7 +44,7 @@ export async function getRoomMatchHistory(roomId: string) {
   const { data, error } = await supabase
     .from('matches')
     .select(
-      'id, room_id, title, status, fixture_id, home_score, away_score, winner, player_of_match'
+      'id, room_id, title, status, fixture_id, home_score, away_score, winner, player_of_match, copa_pare_category, copa_pare_letter, halftime_started_at'
     )
     .eq('room_id', roomId)
     .order('created_at', { ascending: false })
@@ -113,7 +117,9 @@ export async function getUserRoomProfile(roomId: string, userId: string) {
   const supabase = await createClient()
   const { data: member } = await supabase
     .from('room_members')
-    .select('role, users(display_name, avatar_key)')
+    .select(
+      'role, users(display_name, avatar_key, avatar_player_id, football_players(photo_url))'
+    )
     .eq('room_id', roomId)
     .eq('user_id', userId)
     .maybeSingle()
@@ -123,14 +129,139 @@ export async function getUserRoomProfile(roomId: string, userId: string) {
   const users = Array.isArray(member.users) ? member.users[0] : member.users
   const { rows, total, sources } = await getUserPointsInRoom(roomId, userId)
 
+  const userRow = users as UserWithPlayerPortrait | undefined
+
   return {
-    displayName: users?.display_name ?? 'Jogador',
-    avatarKey: users?.avatar_key ?? 'lion',
+    displayName: userRow?.display_name ?? 'Jogador',
+    avatarKey: userRow?.avatar_key ?? 'player',
+    avatarPhotoUrl: userRow ? photoUrlFromUser(userRow) : null,
     role: member.role as DbRoomMember['role'],
     points: total,
     sources,
     pointRows: rows,
   }
+}
+
+export async function getMatchParticipantUserIds(matchId: string) {
+  const supabase = await createClient()
+  const [predictionsResult, copaPareResult] = await Promise.all([
+    supabase.from('predictions').select('user_id').eq('match_id', matchId),
+    supabase.from('copa_pare_entries').select('user_id').eq('match_id', matchId),
+  ])
+
+  if (predictionsResult.error) throw predictionsResult.error
+  if (copaPareResult.error) throw copaPareResult.error
+
+  return {
+    predictionUserIds: new Set(
+      (predictionsResult.data ?? []).map((row) => row.user_id)
+    ),
+    copaPareUserIds: new Set(
+      (copaPareResult.data ?? []).map((row) => row.user_id)
+    ),
+  }
+}
+
+export type RoomMemberBoardRow = {
+  userId: string
+  displayName: string
+  avatarInitial: string
+  avatarColor: string
+  avatarPhotoUrl: string | null
+  role: DbRoomMember['role']
+  points: number
+  position: number
+  statusLabel: string
+  hasPrediction: boolean
+  hasCopaPare: boolean
+  isCurrentUser: boolean
+}
+
+export async function getRoomMemberBoard(
+  context: RoomContext,
+  matchId: string,
+  matchStatus: DbMatch['status'],
+  userId: string | null
+): Promise<RoomMemberBoardRow[]> {
+  const { predictionUserIds, copaPareUserIds } =
+    await getMatchParticipantUserIds(matchId)
+
+  return withRankingPositions(rankingFromContext(context)).map((entry) => {
+    const hasPrediction = predictionUserIds.has(entry.userId)
+    const hasCopaPare = copaPareUserIds.has(entry.userId)
+
+    return {
+      userId: entry.userId,
+      displayName: entry.displayName,
+      avatarInitial: entry.displayName.slice(0, 1).toUpperCase(),
+      avatarColor: avatarColorForName(entry.displayName),
+      avatarPhotoUrl: entry.avatarPhotoUrl,
+      role: entry.role,
+      points: entry.points,
+      position: entry.position,
+      hasPrediction,
+      hasCopaPare,
+      isCurrentUser: entry.userId === userId,
+      statusLabel: buildMemberStatusLabel(
+        matchStatus,
+        hasPrediction,
+        hasCopaPare
+      ),
+    }
+  })
+}
+
+export type RoomMatchHistorySummary = {
+  matchId: string
+  homeTeamName: string
+  awayTeamName: string
+  homeScore: number
+  awayScore: number
+  topPlayerName: string | null
+}
+
+export async function getRoomMatchHistorySummaries(
+  roomId: string,
+  currentMatchId: string,
+  members: RoomContext['members']
+): Promise<RoomMatchHistorySummary[]> {
+  const history = await getRoomMatchHistory(roomId)
+  const finished = history.filter(
+    (row) =>
+      row.id !== currentMatchId &&
+      row.status === 'finished' &&
+      row.home_score != null &&
+      row.away_score != null
+  )
+
+  const summaries = await Promise.all(
+    finished.slice(0, 6).map(async (row) => {
+      const fixture =
+        row.fixture_id != null ? await getFixtureById(row.fixture_id) : null
+      const pointsByUser = await getMemberPointsForMatch(roomId, row.id)
+
+      let topPlayerName: string | null = null
+      let topPoints = -1
+      for (const [memberUserId, points] of pointsByUser) {
+        if (points > topPoints) {
+          topPoints = points
+          const member = members.find((m) => m.user_id === memberUserId)
+          topPlayerName = member?.users.display_name ?? null
+        }
+      }
+
+      return {
+        matchId: row.id,
+        homeTeamName: fixture?.home_team_name ?? '—',
+        awayTeamName: fixture?.away_team_name ?? '—',
+        homeScore: row.home_score!,
+        awayScore: row.away_score!,
+        topPlayerName,
+      }
+    })
+  )
+
+  return summaries
 }
 
 export async function getMatchPredictionSuggestions(matchId: string) {
@@ -173,7 +304,9 @@ export async function getRoomMembers(roomId: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('room_members')
-    .select('id, room_id, user_id, role, users(id, display_name, avatar_key)')
+    .select(
+      'id, room_id, user_id, role, users(id, display_name, avatar_key, avatar_player_id, football_players(photo_url))'
+    )
     .eq('room_id', roomId)
     .order('joined_at', { ascending: true })
 
@@ -186,7 +319,7 @@ export async function getRoomMembers(roomId: string) {
       room_id: row.room_id,
       user_id: row.user_id,
       role: row.role,
-      users: users as DbRoomMember['users'],
+      users: users as UserWithPlayerPortrait,
     }
   })
 }
@@ -247,19 +380,30 @@ export type RankingEntry = {
   userId: string
   displayName: string
   avatarKey: string
+  avatarPhotoUrl: string | null
   role: DbRoomMember['role']
   points: number
 }
 
+function memberToRankingEntry(
+  member: { user_id: string; role: DbRoomMember['role']; users: UserWithPlayerPortrait },
+  points: number
+): RankingEntry {
+  return {
+    userId: member.user_id,
+    displayName: member.users.display_name,
+    avatarKey: member.users.avatar_key,
+    avatarPhotoUrl: photoUrlFromUser(member.users),
+    role: member.role,
+    points,
+  }
+}
+
 function rankingFromContext(context: RoomContext): RankingEntry[] {
   return context.members
-    .map((member) => ({
-      userId: member.user_id,
-      displayName: member.users.display_name,
-      avatarKey: member.users.avatar_key,
-      role: member.role,
-      points: context.pointsByUser.get(member.user_id) ?? 0,
-    }))
+    .map((member) =>
+      memberToRankingEntry(member, context.pointsByUser.get(member.user_id) ?? 0)
+    )
     .sort((left, right) => right.points - left.points)
 }
 
@@ -270,13 +414,9 @@ export async function getRanking(roomId: string): Promise<RankingEntry[]> {
   ])
 
   return members
-    .map((member) => ({
-      userId: member.user_id,
-      displayName: member.users.display_name,
-      avatarKey: member.users.avatar_key,
-      role: member.role,
-      points: pointsByUser.get(member.user_id) ?? 0,
-    }))
+    .map((member) =>
+      memberToRankingEntry(member, pointsByUser.get(member.user_id) ?? 0)
+    )
     .sort((left, right) => right.points - left.points)
 }
 
@@ -290,13 +430,9 @@ export async function getMatchRanking(
   ])
 
   return members
-    .map((member) => ({
-      userId: member.user_id,
-      displayName: member.users.display_name,
-      avatarKey: member.users.avatar_key,
-      role: member.role,
-      points: pointsByUser.get(member.user_id) ?? 0,
-    }))
+    .map((member) =>
+      memberToRankingEntry(member, pointsByUser.get(member.user_id) ?? 0)
+    )
     .sort((left, right) => right.points - left.points)
 }
 

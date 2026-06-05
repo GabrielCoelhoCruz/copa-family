@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Copa Family — Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Archivo', system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+    background: #0c1008;
+    background-image: radial-gradient(120% 70% at 80% -8%, #1a2412 0%, #0a0d06 60%);
+    color: #fff;
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 6px; }
+  input::placeholder { color: rgba(255,255,255,0.3); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 56px 28px 100px; }
+  .mono { font-family: 'DM Mono', monospace; }
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail" data-bg-color="#243018">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#243018" />
+    <g transform="translate(600 330)"><path d="M-95 -150 H95 V-55 a95 95 0 0 1 -190 0 Z" fill="#e6c577" /><path d="M-55 150 H55 M0 40 V150" fill="none" stroke="#e6c577" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" /></g>
+    <text x="600" y="600" font-family="Arial" font-size="62" font-weight="900" fill="#fff" text-anchor="middle">Design System</text>
+  </svg>
+</template>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="app/copa-icons.jsx"></script>
+<script type="text/babel" src="app/copa-data.jsx"></script>
+<script type="text/babel" src="workflow/copa-theme.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState } = React;
+
+// ── doc primitives ───────────────────────────────────────────
+function Section({ n, title, desc, children }) {
+  const T = window.T;
+  return (
+    <section style={{ marginTop: 64 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 6 }}>
+        <span className="mono" style={{ fontSize: 13, color: T.gold, fontWeight: 500 }}>{n}</span>
+        <h2 style={{ margin: 0, fontSize: 26, fontWeight: 800, letterSpacing: -0.3 }}>{title}</h2>
+      </div>
+      {desc && <p style={{ margin: '0 0 22px', fontSize: 15, color: T.muted, maxWidth: 620, lineHeight: 1.5 }}>{desc}</p>}
+      {children}
+    </section>
+  );
+}
+function SubLabel({ children }) {
+  return <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '26px 0 12px' }}>{children}</div>;
+}
+function Panel({ children, style }) {
+  const T = window.T;
+  return <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${T.cardBorderSoft}`, borderRadius: 18, padding: 22, ...style }}>{children}</div>;
+}
+
+// ── color swatch ─────────────────────────────────────────────
+function Swatch({ name, token, value, swatch, note, dark }) {
+  const T = window.T;
+  return (
+    <div style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${T.cardBorderSoft}`, background: 'rgba(255,255,255,0.02)' }}>
+      <div style={{ height: 76, background: swatch || value, position: 'relative' }}>
+        {note && <span style={{ position: 'absolute', bottom: 8, left: 10, fontSize: 10, fontWeight: 800, letterSpacing: 0.4, textTransform: 'uppercase', color: dark ? '#1c2411' : '#fff', opacity: 0.9 }}>{note}</span>}
+      </div>
+      <div style={{ padding: '10px 12px' }}>
+        <div style={{ fontSize: 13.5, fontWeight: 700 }}>{name}</div>
+        <div className="mono" style={{ fontSize: 11, color: T.muted, marginTop: 3 }}>{token}</div>
+        <div className="mono" style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{value}</div>
+      </div>
+    </div>
+  );
+}
+function Grid({ min = 150, children, gap = 12 }) {
+  return <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${min}px, 1fr))`, gap }}>{children}</div>;
+}
+
+function App() {
+  const T = window.T; const I = window.Icon; const UI = window.UI; const { Flag } = window;
+
+  const surfaces = [
+    { name: 'Fundo', token: 'bg', value: '#18230f → #0c1008', swatch: T.bg, note: 'base' },
+    { name: 'Hero (campo)', token: 'hero', value: '#243018', swatch: T.hero, note: 'destaque' },
+    { name: 'Card', token: 'card', value: 'white 5.5%', swatch: 'linear-gradient(180deg,#243218,#1a2710)', note: 'superfície' },
+    { name: 'Borda', token: 'cardBorder', value: 'white 12%', swatch: 'rgba(255,255,255,0.12)' },
+  ];
+  const brand = [
+    { name: 'Ouro · troféu', token: 'gold', value: '#e6c577', dark: true, note: 'campeão · pts · CTA' },
+    { name: 'Ouro fundo', token: 'goldDeep', value: '#c9a24e', dark: true },
+    { name: 'Verde campo', token: 'green', value: '#3a5a2c' },
+    { name: 'Azul céu', token: 'sky', value: '#56b3f0', dark: true },
+    { name: 'Coral', token: 'coral', value: '#ff6b5e', dark: true },
+    { name: 'Amarelo festa', token: 'party', value: '#ffd23f', dark: true },
+    { name: 'Verde vivo', token: 'live', value: '#5fd07f', dark: true },
+    { name: 'Tinta', token: 'ink', value: '#1c2411', note: 'sobre ouro' },
+  ];
+  const texts = [
+    { name: 'Texto', token: 'text', value: '#ffffff', swatch: '#ffffff', dark: true },
+    { name: 'Suave', token: 'muted', value: 'white 60%', swatch: 'rgba(255,255,255,0.6)' },
+    { name: 'Tênue', token: 'faint', value: 'white 38%', swatch: 'rgba(255,255,255,0.38)' },
+  ];
+
+  const typeScale = [
+    { label: 'Display XL', spec: 'Archivo 900 · 33/1.06', size: 33, w: 900, sample: 'Verdadeiro campeão' },
+    { label: 'Display L', spec: 'Archivo 900 · 27', size: 27, w: 900, sample: 'É dia de jogo' },
+    { label: 'Título', spec: 'Archivo 800 · 22', size: 22, w: 800, sample: 'Mande o palpite' },
+    { label: 'Heading', spec: 'Archivo 800 · 18', size: 18, w: 800, sample: 'Como funciona' },
+    { label: 'Corpo', spec: 'Archivo 600 · 15', size: 15, w: 600, sample: 'Palpites, desafios e ranking ao vivo.' },
+    { label: 'Label', spec: 'Archivo 800 · 12 · caixa alta', size: 12, w: 800, sample: 'RANKING DA SALA', upper: true },
+  ];
+
+  const icons = ['trophy','target','ball','users','person','crown','flame','lightning','medal','star','calendar','home','clock','timer','qr','lock','play','pause','check','check-circle','plus','minus','chevron-left','chevron-right','share','copy','link','edit','sliders','info','reset','x','camera','gift','logout','sparkle'];
+
+  const radii = [{ l: 'sm', v: 12 }, { l: 'md', v: 14 }, { l: 'lg', v: 16 }, { l: 'card', v: 20 }, { l: 'pill', v: 30 }];
+
+  return (
+    <div className="wrap">
+      {/* header */}
+      <header style={{ display: 'flex', alignItems: 'center', gap: 16, paddingBottom: 28, borderBottom: `1px solid ${T.cardBorderSoft}` }}>
+        <div style={{ width: 54, height: 54, borderRadius: 16, background: T.goldGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 28px -10px rgba(201,162,78,0.6)' }}>
+          <I name="trophy" size={30} color={T.ink} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <h1 style={{ margin: 0, fontSize: 30, fontWeight: 900, letterSpacing: -0.5 }}>Copa Family · Design System</h1>
+          <div style={{ fontSize: 14.5, color: T.muted, marginTop: 3 }}>Variação C — “Estádio” · verde &amp; ouro · pt-BR · mobile-first 390×844</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div className="mono" style={{ fontSize: 12, color: T.gold }}>v1.0</div>
+          <div style={{ fontSize: 11.5, color: T.faint, marginTop: 2 }}>fonte: copa-theme.jsx</div>
+        </div>
+      </header>
+
+      {/* principles */}
+      <Section n="00" title="Princípios" desc="Três regras que mantêm o app coeso e com energia de torcida — sem virar um bloco verde só.">
+        <Grid min={300}>
+          {[
+            { ic: 'sliders', t: 'Contraste primeiro', d: 'Fundo escuro, cards elevados, headline branca. O card principal grita, não sussurra.' },
+            { ic: 'crown', t: 'Ouro com parcimônia', d: 'O dourado é só para 3 coisas: campeão, pontuação e o botão principal (CTA).' },
+            { ic: 'lightning', t: 'Diversão > competição', d: 'Copa Pare, medalhas, reações. Até quem não entende de futebol pode ganhar.' },
+          ].map((p) => (
+            <Panel key={p.t}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(230,197,119,0.13)', border: '1px solid rgba(230,197,119,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}><I name={p.ic} size={22} color={T.gold} /></div>
+              <div style={{ fontSize: 16, fontWeight: 800 }}>{p.t}</div>
+              <div style={{ fontSize: 13.5, color: T.muted, marginTop: 5, lineHeight: 1.5 }}>{p.d}</div>
+            </Panel>
+          ))}
+        </Grid>
+      </Section>
+
+      {/* colors */}
+      <Section n="01" title="Cores" desc="Superfícies escuras para dar profundidade; o ouro é a cor de ação. Azul, coral e amarelo são acentos secundários (status, Copa Pare, medalhas).">
+        <SubLabel>Superfícies</SubLabel>
+        <Grid>{surfaces.map((s) => <Swatch key={s.token} {...s} />)}</Grid>
+        <SubLabel>Marca &amp; acentos</SubLabel>
+        <Grid>{brand.map((s) => <Swatch key={s.token} {...s} swatch={s.value} />)}</Grid>
+        <SubLabel>Texto</SubLabel>
+        <Grid>{texts.map((s) => <Swatch key={s.token} {...s} />)}</Grid>
+      </Section>
+
+      {/* typography */}
+      <Section n="02" title="Tipografia" desc="Archivo em todos os pesos para display e corpo; DM Mono só para o código da sala. Sem itálico, sem serifa.">
+        <Panel>
+          {typeScale.map((t, i) => (
+            <div key={t.label} style={{ display: 'flex', alignItems: 'baseline', gap: 20, padding: '14px 0', borderBottom: i < typeScale.length - 1 ? `1px solid ${T.cardBorderSoft}` : 'none' }}>
+              <div style={{ width: 150, flexShrink: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>{t.label}</div>
+                <div className="mono" style={{ fontSize: 11, color: T.faint, marginTop: 2 }}>{t.spec}</div>
+              </div>
+              <div style={{ fontSize: t.size, fontWeight: t.w, textTransform: t.upper ? 'uppercase' : 'none', letterSpacing: t.upper ? 0.8 : -0.3, color: t.label === 'Corpo' ? T.muted : '#fff' }}>{t.sample}</div>
+            </div>
+          ))}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 20, paddingTop: 16 }}>
+            <div style={{ width: 150, flexShrink: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>Mono · código</div>
+              <div className="mono" style={{ fontSize: 11, color: T.faint, marginTop: 2 }}>DM Mono 500 · 22</div>
+            </div>
+            <div className="mono" style={{ fontSize: 22, fontWeight: 500, color: T.gold, letterSpacing: 3 }}>COPA-7K2</div>
+          </div>
+        </Panel>
+      </Section>
+
+      {/* spacing & radius */}
+      <Section n="03" title="Espaçamento &amp; raios" desc="Padding de página de 18px (--site-page-px). Cantos generosos: cards 20, pílulas totalmente arredondadas.">
+        <SubLabel>Raios</SubLabel>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          {radii.map((r) => (
+            <div key={r.l} style={{ textAlign: 'center' }}>
+              <div style={{ width: 92, height: 64, background: 'rgba(255,255,255,0.05)', border: `1px solid ${T.cardBorder}`, borderRadius: r.v, borderBottomLeftRadius: 0 }} />
+              <div style={{ fontSize: 12, fontWeight: 700, marginTop: 8 }}>{r.l}</div>
+              <div className="mono" style={{ fontSize: 11, color: T.faint }}>{r.v}px</div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* icons */}
+      <Section n="04" title="Iconografia" desc="Traço de 2px, cantos arredondados, 24×24. Esportivo e claro. Emoji só em reações de torcida (conteúdo do produto).">
+        <Panel>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(92px, 1fr))', gap: 6 }}>
+            {icons.map((name) => (
+              <div key={name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '16px 6px', borderRadius: 12, background: 'rgba(255,255,255,0.02)' }}>
+                <I name={name} size={24} color={T.gold} />
+                <span className="mono" style={{ fontSize: 10, color: T.faint }}>{name}</span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </Section>
+
+      {/* components */}
+      <Section n="05" title="Componentes" desc="Os mesmos átomos usados no app (UI.* de copa-theme.jsx).">
+        <SubLabel>Botões</SubLabel>
+        <Panel>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center' }}>
+            <div style={{ width: 200 }}><UI.Btn icon="trophy">Primário</UI.Btn></div>
+            <div style={{ width: 200 }}><UI.Btn kind="coral" icon="lightning">Coral</UI.Btn></div>
+            <div style={{ width: 180 }}><UI.Btn kind="sky" icon="play">Sky</UI.Btn></div>
+            <div style={{ width: 170 }}><UI.Btn kind="ghost" icon="link">Ghost</UI.Btn></div>
+            <div style={{ width: 150 }}><UI.Btn kind="dark" size="md">Dark</UI.Btn></div>
+            <div style={{ width: 150 }}><UI.Btn size="sm" icon="plus">Pequeno</UI.Btn></div>
+          </div>
+        </Panel>
+
+        <SubLabel>Status da partida</SubLabel>
+        <Panel>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            {['lobby','predictions_open','live','halftime','finished'].map((s) => <UI.StatusBadge key={s} status={s} />)}
+          </div>
+        </Panel>
+
+        <SubLabel>Cards, avatares &amp; bandeiras</SubLabel>
+        <Grid min={250}>
+          <UI.Card solid glow pad={16}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}><UI.StatusBadge status="predictions_open" size="sm" /></div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
+              <div style={{ textAlign: 'center' }}><Flag code="BRA" size={40} round /><div style={{ fontSize: 12, fontWeight: 700, marginTop: 5 }}>Brasil</div></div>
+              <div style={{ fontFamily: T.display, fontWeight: 900, color: T.gold }}>VS</div>
+              <div style={{ textAlign: 'center' }}><Flag code="ARG" size={40} round /><div style={{ fontSize: 12, fontWeight: 700, marginTop: 5 }}>Argentina</div></div>
+            </div>
+          </UI.Card>
+          <UI.Card pad={16}>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: T.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>Avatares</div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              {window.COPA.members.slice(0,5).map((m) => <UI.Avatar key={m.id} m={m} size={40} />)}
+            </div>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: T.muted, textTransform: 'uppercase', letterSpacing: 0.8, margin: '16px 0 10px' }}>Bandeiras (CSS)</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {['BRA','ARG','FRA','POR','ESP','GER','ENG','NED'].map((c) => <Flag key={c} code={c} size={30} round />)}
+            </div>
+          </UI.Card>
+        </Grid>
+
+        <SubLabel>Linha de ranking &amp; pontos</SubLabel>
+        <Panel style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {window.COPA.members.slice(0,3).map((m, i) => (
+            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: 16, background: m.you ? 'rgba(230,197,119,0.12)' : T.card, border: `1px solid ${m.you ? 'rgba(230,197,119,0.45)' : T.cardBorder}` }}>
+              <div style={{ width: 22, textAlign: 'center', fontFamily: T.display, fontWeight: 800, fontSize: 16, color: i < 3 ? T.gold : T.faint }}>{i+1}</div>
+              <UI.Avatar m={m} size={36} />
+              <div style={{ flex: 1, fontSize: 15, fontWeight: 700 }}>{m.name}</div>
+              {i === 0 && <I name="crown" size={18} color={T.gold} />}
+              <div style={{ textAlign: 'right' }}><div style={{ fontFamily: T.display, fontWeight: 900, fontSize: 18 }}>{m.roomPts}</div><div style={{ fontSize: 9.5, color: T.faint, fontWeight: 700 }}>PTS</div></div>
+            </div>
+          ))}
+          <div style={{ display: 'flex', gap: 16, marginTop: 6, paddingLeft: 4 }}>
+            <UI.PointsDelta value={10} /><UI.PointsDelta value={50} kind="live" /><UI.PointsDelta value={100} kind="coral" />
+          </div>
+        </Panel>
+
+        <SubLabel>Campos &amp; chips</SubLabel>
+        <Panel>
+          <input defaultValue="Família Coelho" style={{ width: '100%', boxSizing: 'border-box', height: 54, borderRadius: 15, padding: '0 16px', background: T.card, border: `1.5px solid ${T.cardBorder}`, color: '#fff', fontSize: 16.5, fontWeight: 600, fontFamily: T.display, outline: 'none', marginBottom: 14 }} />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {['Vini Jr.','Messi','Endrick'].map((p, i) => (
+              <div key={p} style={{ padding: '9px 14px', borderRadius: 20, background: i === 0 ? T.goldGrad : T.card, color: i === 0 ? T.ink : '#fff', border: `1px solid ${i === 0 ? 'transparent' : T.cardBorder}`, fontSize: 13.5, fontWeight: 700 }}>{p}</div>
+            ))}
+          </div>
+        </Panel>
+
+        <SubLabel>Navegação inferior (sala)</SubLabel>
+        <Panel style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', background: 'rgba(10,14,7,0.6)', padding: '10px 8px 8px' }}>
+            {[['ball','Jogo',true],['target','Palpite',false],['trophy','Ranking',false],['person','Perfil',false]].map(([ic, l, on]) => (
+              <div key={l} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                <I name={ic} size={23} color={on ? T.gold : T.faint} strokeWidth={on ? 2.4 : 2} />
+                <span style={{ fontSize: 11, fontWeight: on ? 800 : 600, color: on ? T.gold : T.faint }}>{l}</span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </Section>
+
+      <footer style={{ marginTop: 72, paddingTop: 24, borderTop: `1px solid ${T.cardBorderSoft}`, fontSize: 12.5, color: T.faint, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+        <span>Copa Family · Design System · Variação C</span>
+        <span className="mono">tokens: window.T · átomos: window.UI · ícones: window.Icon</span>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

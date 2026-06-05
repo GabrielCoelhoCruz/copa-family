@@ -3,7 +3,7 @@
 ## Pré-requisitos
 
 - Conta [Vercel](https://vercel.com)
-- Projeto Supabase com migrations aplicadas (`001`–`005`)
+- Projeto Supabase com migrations aplicadas (`001`–`007`)
 - Repositório Git conectado (recomendado)
 
 ## Variáveis de ambiente (Vercel)
@@ -43,6 +43,23 @@ node scripts/sync-world-cup-catalog.mjs --provider=wc26-rapidapi --mode=catalog
 ```
 
 Depois confira `/calendario` (seleções + jogos) e crie uma sala em `/criar-sala`.
+
+### Retratos de jogadores (avatars)
+
+A migration `007_football_players.sql` cria a tabela e o bucket `player-portraits` (leitura pública).
+
+Ordem local (com `.env.local` e service role):
+
+```bash
+npm run seed:players    # importa data/world-cup/featured-players.json (24 jogadores)
+npm run sync:players    # TheSportsDB → download → Supabase Storage → photo_url
+```
+
+Ou use `/admin/catalogo` (com `ENABLE_ADMIN_METRICS=true`): **Importar lista** e **Sincronizar retratos**.
+
+Antes de abrir criar/entrar sala em produção, confira em `/admin/catalogo` que há pelo menos ~20 jogadores com retrato (`com foto / total`).
+
+Usuários antigos sem `avatar_player_id` veem iniciais do nome até entrarem de novo com um jogador escolhido.
 
 ### Runbook de operação do catálogo
 

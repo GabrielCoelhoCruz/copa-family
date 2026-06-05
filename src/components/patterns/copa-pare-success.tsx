@@ -8,6 +8,7 @@ import { routes } from '@/lib/routes'
 type CopaPareSuccessProps = {
   categoryLabel?: string
   answer?: string
+  letter?: string | null
   rankingHref: string
   roomCode: string
 }
@@ -15,12 +16,23 @@ type CopaPareSuccessProps = {
 function CopaPareSuccess({
   categoryLabel,
   answer,
+  letter,
   rankingHref,
   roomCode,
 }: CopaPareSuccessProps) {
+  const descriptionParts: string[] = []
+  if (letter && categoryLabel) {
+    descriptionParts.push(`${categoryLabel} · letra ${letter}`)
+  } else if (categoryLabel) {
+    descriptionParts.push(categoryLabel)
+  }
+  if (answer) {
+    descriptionParts.push(answer)
+  }
+
   const description =
-    categoryLabel && answer
-      ? `${categoryLabel}: ${answer}`
+    descriptionParts.length > 0
+      ? descriptionParts.join(' — ')
       : 'Resposta registrada nesta rodada.'
 
   return (
@@ -28,9 +40,10 @@ function CopaPareSuccess({
       <CopaAmbient variant="celebrate" />
       <div className="relative z-10">
         <RoundResultCard
-          title="Você entrou no Copa Pare!"
+          title="Você entrou no Copa Stop!"
           description={description}
           points={POINTS.copaPareParticipation}
+          pointsHint={`+${POINTS.copaPareUnique} se ninguém repetir sua resposta`}
           primaryHref={rankingHref}
           primaryLabel="Ver ranking"
           secondaryHref={routes.sala(roomCode)}

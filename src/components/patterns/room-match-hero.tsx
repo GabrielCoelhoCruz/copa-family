@@ -1,8 +1,7 @@
 import Link from 'next/link'
-import { CalendarClock, MapPin, Users } from 'lucide-react'
+import { Target, Zap } from 'lucide-react'
 
 import type { RoomNextAction } from '@/features/rooms/room-next-action'
-import { TeamVersusStrip } from '@/components/patterns/team-versus-strip'
 import {
   formatFixtureKickoff,
   formatFixtureMeta,
@@ -10,6 +9,8 @@ import {
 } from '@/features/fixtures/format'
 import type { CatalogFixtureView } from '@/features/fixtures/catalog-view'
 import { MatchStatusBadge } from '@/components/patterns/match-status-badge'
+import { StadiumCard } from '@/components/patterns/stadium-card'
+import { StadiumFlag } from '@/components/patterns/stadium-flag'
 import { buttonVariants } from '@/components/ui/button'
 import type { MatchStatus } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -26,14 +27,79 @@ type RoomMatchHeroProps = {
   fixture?: CatalogFixtureView | null
 }
 
+function PitchOverlay() {
+  return (
+    <svg
+      viewBox="0 0 360 120"
+      preserveAspectRatio="none"
+      className="pointer-events-none absolute inset-0 size-full opacity-50"
+      aria-hidden
+    >
+      <g fill="none" stroke="rgba(230,197,119,0.4)" strokeWidth="1.2">
+        <rect x="6" y="6" width="348" height="108" rx="4" />
+        <line x1="180" y1="6" x2="180" y2="114" />
+        <circle cx="180" cy="60" r="24" />
+      </g>
+    </svg>
+  )
+}
+
+function TeamMatchColumn({
+  teamName,
+  score,
+  showScore,
+}: {
+  teamName: string
+  score: number | null
+  showScore: boolean
+}) {
+  return (
+    <div className="flex min-w-0 flex-col items-center gap-2 px-0.5">
+      <div className="flex size-12 shrink-0 items-center justify-center">
+        <StadiumFlag teamName={teamName} size={48} round />
+      </div>
+      {showScore && score != null ? (
+        <div className="font-heading text-[40px] font-black leading-none text-white drop-shadow-md">
+          {score}
+        </div>
+      ) : null}
+      <p className="w-full text-center text-xs font-bold leading-snug text-pretty">
+        {teamName}
+      </p>
+    </div>
+  )
+}
+
+function CenterMatchColumn({
+  showScore,
+  kickoffLabel,
+}: {
+  showScore: boolean
+  kickoffLabel: string
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-1.5 self-center px-0.5">
+      {showScore ? (
+        <div className="flex size-[50px] items-center justify-center font-heading text-lg font-black text-[var(--cf-faint)]">
+          ×
+        </div>
+      ) : (
+        <div className="flex size-[50px] shrink-0 items-center justify-center rounded-full border border-[rgba(230,197,119,0.5)] bg-[radial-gradient(circle,rgba(230,197,119,0.3),rgba(230,197,119,0.05))] font-heading text-lg font-black text-[var(--cf-gold)]">
+          VS
+        </div>
+      )}
+      <p className="max-w-full text-center text-[10.5px] leading-tight font-bold text-white/80 text-balance">
+        {kickoffLabel}
+      </p>
+    </div>
+  )
+}
+
 function RoomMatchHero({
   title,
   status,
-  predictionCount,
-  memberCount,
   homeScore,
   awayScore,
-  winner,
   nextAction,
   fixture = null,
 }: RoomMatchHeroProps) {
@@ -48,124 +114,83 @@ function RoomMatchHero({
       ? `#${nextAction.anchorTargetId}`
       : nextAction.href
 
+  const ctaVariant =
+    nextAction.emphasis === 'party'
+      ? 'stadium-coral'
+      : nextAction.emphasis === 'default'
+        ? 'stadium'
+        : 'stadium-ghost'
+
+  const CtaIcon =
+    status === 'halftime' ? Zap : status === 'predictions_open' ? Target : undefined
+
   return (
-    <section
-      aria-labelledby="match-hero-heading"
-      className="cf-animate-in overflow-hidden rounded-2xl border border-brand-field/25 bg-gradient-to-br from-brand-field/12 via-card to-card shadow-md"
-    >
+    <StadiumCard solid glow pad={0} className="overflow-hidden">
       <div
-        className="relative px-4 pb-4 pt-4"
+        className="relative px-4 pb-3.5 pt-4"
         style={{
-          backgroundImage:
-            'repeating-linear-gradient(90deg, color-mix(in oklch, var(--brand-field), transparent 92%) 0, color-mix(in oklch, var(--brand-field), transparent 92%) 1px, transparent 1px, transparent 28px)',
+          background:
+            'repeating-linear-gradient(90deg,#2c4322 0 28px,#28401f 28px 56px)',
         }}
       >
-        <div className="relative flex flex-wrap items-start justify-between gap-2">
-          <div className="min-w-0 space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Jogo atual
+        <PitchOverlay />
+        <div className="relative">
+          <div className="mb-3 flex justify-center">
+            <MatchStatusBadge status={status} variant="stadium" />
+          </div>
+
+          {fixture ? (
+            <div className="grid grid-cols-3 items-start gap-1">
+              <TeamMatchColumn
+                teamName={fixture.home_team_name}
+                score={homeScore}
+                showScore={showScore}
+              />
+              <CenterMatchColumn
+                showScore={showScore}
+                kickoffLabel={
+                  status === 'finished' ? 'Final' : kickoff ?? displayTitle
+                }
+              />
+              <TeamMatchColumn
+                teamName={fixture.away_team_name}
+                score={awayScore}
+                showScore={showScore}
+              />
+            </div>
+          ) : (
+            <h2 className="text-center font-heading text-xl font-black">{displayTitle}</h2>
+          )}
+
+          {meta ? (
+            <p className="mt-2.5 flex w-full items-center justify-center gap-1.5 text-[11px] text-white/60">
+              <Target className="size-3 shrink-0 opacity-50" aria-hidden />
+              {meta}
             </p>
-            {!fixture ? (
-              <h2
-                id="match-hero-heading"
-                className="font-heading text-2xl font-black leading-tight tracking-tight"
-              >
-                {displayTitle}
-              </h2>
-            ) : null}
-            {fixture && title !== displayTitle ? (
-              <p className="text-xs text-muted-foreground">{title}</p>
-            ) : null}
-          </div>
-          <MatchStatusBadge status={status} />
+          ) : null}
         </div>
-
-        {fixture ? (
-          <div className="mt-3">
-            <h2 id="match-hero-heading" className="sr-only">
-              {displayTitle}
-            </h2>
-            <TeamVersusStrip fixture={fixture} size="lg" />
-          </div>
-        ) : null}
-
-        {kickoff ? (
-          <p className="mt-3 flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
-            <CalendarClock className="size-3.5 shrink-0" aria-hidden />
-            {kickoff}
-          </p>
-        ) : null}
-
-        {meta ? (
-          <p className="mt-1 flex items-start justify-center gap-1.5 text-center text-xs text-muted-foreground">
-            <MapPin className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-            <span>{meta}</span>
-          </p>
-        ) : null}
-
-        {showScore ? (
-          <p className="mt-3 text-center font-heading text-3xl font-black tabular-nums tracking-tight sm:text-4xl">
-            {homeScore}
-            <span className="mx-2 text-2xl text-muted-foreground">×</span>
-            {awayScore}
-          </p>
-        ) : null}
-
-        {winner && status === 'finished' ? (
-          <p className="mt-1 text-center text-sm font-medium text-muted-foreground">
-            Vencedor: <span className="text-foreground">{winner}</span>
-          </p>
-        ) : null}
-
-        <ul className="mt-3 flex flex-wrap justify-center gap-3 text-xs font-medium text-muted-foreground">
-          <li className="flex items-center gap-1">
-            <Users className="size-3.5" aria-hidden />
-            {memberCount} jogadores
-          </li>
-          <li className="flex items-center gap-1">
-            <CalendarClock className="size-3.5" aria-hidden />
-            {predictionCount} palpite(s)
-          </li>
-        </ul>
       </div>
 
-      <div className="border-t border-border/70 bg-card/80 px-4 py-4">
-        <p className="font-semibold text-foreground">{nextAction.title}</p>
-        <p className="mt-0.5 text-sm text-muted-foreground">{nextAction.description}</p>
+      <div className="px-3.5 py-3.5">
         {nextAction.ctaKind === 'anchor' ? (
           <a
             href={ctaHref}
-            className={cn(
-              buttonVariants({
-                variant: nextAction.emphasis === 'party' ? 'party' : 'outline',
-                size: 'lg',
-              }),
-              'cf-pressable mt-3 flex min-h-12 w-full items-center justify-center'
-            )}
+            className={cn(buttonVariants({ variant: ctaVariant }), 'cf-pressable w-full')}
           >
+            {CtaIcon ? <CtaIcon className="size-[19px]" aria-hidden /> : null}
             {nextAction.ctaLabel}
           </a>
         ) : (
           <Link
             href={ctaHref}
-            className={cn(
-              buttonVariants({
-                variant:
-                  nextAction.emphasis === 'party'
-                    ? 'party'
-                    : nextAction.emphasis === 'default'
-                      ? 'default'
-                      : 'outline',
-                size: 'lg',
-              }),
-              'cf-pressable mt-3 flex min-h-12 w-full items-center justify-center'
-            )}
+            className={cn(buttonVariants({ variant: ctaVariant }), 'cf-pressable w-full')}
           >
+            {CtaIcon ? <CtaIcon className="size-[19px]" aria-hidden /> : null}
             {nextAction.ctaLabel}
           </Link>
         )}
       </div>
-    </section>
+    </StadiumCard>
   )
 }
 

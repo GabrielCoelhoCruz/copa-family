@@ -3,6 +3,7 @@
 import { useFormStatus } from 'react-dom'
 import { Check, ChevronRight, Circle, Users } from 'lucide-react'
 
+import { CopaStopHostPanel } from '@/components/patterns/copa-stop-host-panel'
 import { updateMatchStatusFormAction } from '@/features/rooms/actions'
 import {
   getHostNextStepHint,
@@ -23,6 +24,8 @@ type HostGameControlProps = {
   memberCount: number
   predictionCount: number
   hasMatchResult: boolean
+  copaPareCategory?: string | null
+  copaPareLetter?: string | null
 }
 
 const STEPS = [
@@ -75,6 +78,8 @@ function HostGameControl({
   memberCount,
   predictionCount,
   hasMatchResult,
+  copaPareCategory = null,
+  copaPareLetter = null,
 }: HostGameControlProps) {
   const primary = getPrimaryHostAction(status)
   const secondary = getSecondaryHostActions(status)
@@ -132,6 +137,16 @@ function HostGameControl({
         <p className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
           Resultado pendente. Salve o placar para pontuar a rodada.
         </p>
+      ) : null}
+
+      {status === 'halftime' && copaPareCategory && copaPareLetter ? (
+        <CopaStopHostPanel
+          matchId={matchId}
+          roomId={roomId}
+          roomCode={roomCode}
+          category={copaPareCategory}
+          letter={copaPareLetter}
+        />
       ) : null}
 
       {primary ? (

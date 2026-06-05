@@ -109,7 +109,12 @@ export async function submitBasicPrediction(page: Page, input: PredictionInput =
 
   await predictionForm.locator('#homeScore').fill(homeScore)
   await predictionForm.locator('#awayScore').fill(awayScore)
-  await predictionForm.locator('#playerOfMatch').fill(player)
+  const playerChip = predictionForm.getByRole('button', { name: player, exact: true })
+  if ((await playerChip.count()) > 0) {
+    await playerChip.click()
+  } else {
+    await predictionForm.locator('#playerOfMatch').fill(player)
+  }
   await page.getByRole('button', { name: /Salvar palpite/ }).click()
 }
 
@@ -131,7 +136,7 @@ export async function goToCopaPare(page: Page, roomCode: string) {
 
 export async function submitCopaPareAnswer(page: Page, answer: string) {
   await page.getByLabel('Sua resposta').fill(answer)
-  await page.getByRole('button', { name: /Confirmar Copa Pare/ }).click()
+  await page.getByRole('button', { name: /Confirmar Copa Stop/ }).click()
 }
 
 export async function submitMatchResult(

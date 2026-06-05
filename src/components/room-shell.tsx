@@ -1,8 +1,13 @@
+import type { ReactNode } from 'react'
+import Link from 'next/link'
+import { QrCode } from 'lucide-react'
+
 import { PageStack } from '@/components/layouts/page-stack'
-import { RoomTabNav } from '@/components/room-tab-nav'
 import { CopaAmbient } from '@/components/patterns/copa-ambient'
 import { CopaPareEventPill } from '@/components/patterns/copa-pare-event-pill'
 import { MatchStatusBadge } from '@/components/patterns/match-status-badge'
+import { RoomTabNav } from '@/components/room-tab-nav'
+import { routes } from '@/lib/routes'
 import type { MatchStatus } from '@/lib/types'
 
 type RoomShellProps = {
@@ -10,7 +15,9 @@ type RoomShellProps = {
   roomName: string
   matchStatus: MatchStatus
   showCopaPareEvent?: boolean
-  children: React.ReactNode
+  connectionState?: 'live' | 'reconnecting' | 'polling'
+  liveBanner?: ReactNode
+  children: ReactNode
 }
 
 function RoomShell({
@@ -18,35 +25,53 @@ function RoomShell({
   roomName,
   matchStatus,
   showCopaPareEvent = false,
+  connectionState = 'live',
+  liveBanner = null,
   children,
 }: RoomShellProps) {
+  const code = roomCode.toUpperCase()
+
   return (
     <div className="relative mx-auto grid h-dvh w-full max-w-md grid-rows-[auto_minmax(0,1fr)_auto]">
       <CopaAmbient variant="sala" className="-z-10" />
 
-      <header className="space-y-1 px-[var(--site-page-px)] pt-4">
-        <div className="rounded-2xl border border-border/80 bg-card/90 p-4 shadow-sm">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Sala · {roomCode}
-              </p>
-              <h1 className="truncate font-heading text-2xl font-bold leading-tight">
-                {roomName}
-              </h1>
-            </div>
-            <div className="shrink-0 self-start">
-              <MatchStatusBadge status={matchStatus} animateOnChange />
-            </div>
-          </div>
+      <header className="relative z-20 flex shrink-0 items-center gap-3 border-b border-[var(--cf-card-border-soft)] bg-[var(--home-chrome)] px-[var(--site-page-px)] py-3 backdrop-blur-md">
+        <Link
+          href={`${routes.sala(roomCode)}?qr=1`}
+          scroll={false}
+          className="flex min-w-0 flex-1 flex-col items-start gap-0.5 border-0 bg-transparent p-0 text-left"
+        >
+          <span className="inline-flex items-center gap-1.5 font-mono text-sm font-medium tracking-wide text-[var(--cf-gold)]">
+            {code}
+            <QrCode className="size-3.5" aria-hidden />
+          </span>
+          <span className="truncate text-[12.5px] font-semibold text-[var(--cf-muted)]">
+            {roomName}
+          </span>
+        </Link>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          {connectionState === 'reconnecting' ? (
+            <span className="font-mono text-[10px] font-medium tracking-wide text-[var(--cf-muted)]">
+              Reconectando…
+            </span>
+          ) : null}
+          <MatchStatusBadge status={matchStatus} variant="stadium" animateOnChange />
         </div>
       </header>
 
-      <main className="cf-scrollbar-hidden min-h-0 overflow-y-auto overscroll-y-contain px-[var(--site-page-px)] pb-4 pt-4">
-        <PageStack>{children}</PageStack>
+      <main className="cf-scrollbar-hidden relative flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain px-[var(--site-page-px)] pb-0 pt-3.5">
+        <PageStack className="cf-route-anim flex min-h-0 flex-1 flex-col pb-3">
+          {children}
+        </PageStack>
       </main>
 
       <div className="shrink-0">
+        {liveBanner ? (
+          <div className="px-[var(--site-page-px)] pb-2" role="region" aria-label="Atualização da sala">
+            {liveBanner}
+          </div>
+        ) : null}
+
         {showCopaPareEvent ? (
           <div
             className="px-[var(--site-page-px)] pb-2"

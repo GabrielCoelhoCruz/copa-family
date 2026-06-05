@@ -7,6 +7,11 @@ import { CopaPareSuccess } from '@/components/patterns/copa-pare-success'
 import { EmptyState } from '@/components/patterns/empty-state'
 import { isCopaParePlayPhase } from '@/features/rooms/copa-pare-visibility'
 import { getCopaPareEntry, getRoomContext } from '@/features/rooms/queries'
+import {
+  copaPareCategoryLabel,
+  getCopaPareCategoryByValue,
+} from '@/lib/copa-pare-categories'
+import { POINTS } from '@/features/points/rules'
 import { routes } from '@/lib/routes'
 import { getGuestUserId } from '@/lib/session'
 import { buttonVariants } from '@/components/ui/button'
@@ -16,8 +21,6 @@ type CopaParePageProps = {
   params: Promise<{ roomCode: string }>
   searchParams: Promise<{ enviado?: string }>
 }
-
-import { COPA_PARE_CATEGORY_LABELS, type CopaPareCategoryValue } from '@/lib/copa-pare-categories'
 
 export default async function CopaParePage({
   params,
@@ -36,13 +39,16 @@ export default async function CopaParePage({
   const canPlay = isCopaParePlayPhase(match.status)
   const existing =
     userId != null ? await getCopaPareEntry(match.id, userId) : null
+  const category = match.copa_pare_category
+    ? getCopaPareCategoryByValue(match.copa_pare_category)
+    : null
 
   if (!canPlay) {
     return (
       <EmptyState
         icon={<PartyPopper className="size-6" />}
-        title="Copa Pare no intervalo"
-        description="Quando o anfitrião abrir o intervalo, o botão Copa Pare aparece na tela Jogo (+100 pts). Durante o ao vivo, use as reações rápidas da sala."
+        title="Copa Stop no intervalo"
+        description={`Quando o anfitrião abrir o intervalo, o Copa Stop aparece na tela Jogo (+${POINTS.copaPareParticipation} pts, +${POINTS.copaPareUnique} se único). Durante o ao vivo, use as reações rápidas da sala.`}
         action={
           <Link
             href={routes.sala(room.code)}
@@ -60,11 +66,11 @@ export default async function CopaParePage({
       <CopaPareSuccess
         categoryLabel={
           existing
-            ? (COPA_PARE_CATEGORY_LABELS[existing.category as CopaPareCategoryValue] ??
-              existing.category)
-            : undefined
+            ? copaPareCategoryLabel(existing.category)
+            : category?.label
         }
         answer={existing?.answer}
+        letter={match.copa_pare_letter}
         rankingHref={routes.ranking(room.code)}
         roomCode={room.code}
       />
@@ -76,7 +82,25 @@ export default async function CopaParePage({
       <EmptyState
         icon={<PartyPopper className="size-6" />}
         title="Entre na sala"
-        description="Volte pelo link de convite para participar do Copa Pare."
+        description="Volte pelo link de convite para participar do Copa Stop."
+      />
+    )
+  }
+
+  if (!category || !match.copa_pare_letter) {
+    return (
+      <EmptyState
+        icon={<PartyPopper className="size-6" />}
+        title="Aguardando o sorteio"
+        description="O anfitrião precisa abrir o intervalo para sortear categoria e letra do Copa Stop."
+        action={
+          <Link
+            href={routes.sala(room.code)}
+            className={cn(buttonVariants({ variant: 'outline' }), 'min-h-11')}
+          >
+            Voltar ao jogo
+          </Link>
+        }
       />
     )
   }
@@ -86,7 +110,9 @@ export default async function CopaParePage({
       matchId={match.id}
       roomId={room.id}
       roomCode={room.code}
-      seed={`${match.id}-${userId}`}
+      categoryValue={category.value}
+      letter={match.copa_pare_letter}
+      halftimeStartedAt={match.halftime_started_at}
     />
   )
 }

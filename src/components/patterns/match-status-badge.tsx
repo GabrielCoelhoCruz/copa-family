@@ -1,5 +1,6 @@
 import { CircleDot, Pause, Radio, Target, Trophy, Users } from 'lucide-react'
 
+import { StadiumStatusBadge } from '@/components/patterns/stadium-status-badge'
 import { Badge } from '@/components/ui/badge'
 import type { MatchStatus } from '@/lib/types'
 
@@ -43,9 +44,28 @@ type MatchStatusBadgeProps = {
   className?: string
   /** Re-mount + entrance animation when status changes */
   animateOnChange?: boolean
+  /** Prototype stadium chip (dark pill + dot) */
+  variant?: 'default' | 'stadium'
+  size?: 'sm' | 'md'
 }
 
-function MatchStatusBadge({ status, className, animateOnChange = false }: MatchStatusBadgeProps) {
+function MatchStatusBadge({
+  status,
+  className,
+  animateOnChange = false,
+  variant = 'stadium',
+  size = 'md',
+}: MatchStatusBadgeProps) {
+  if (variant === 'stadium') {
+    const badge = <StadiumStatusBadge status={status} size={size} className={className} />
+    if (!animateOnChange) return badge
+    return (
+      <div key={status} className="cf-status-swap">
+        {badge}
+      </div>
+    )
+  }
+
   const view = MATCH_STATUS_VIEW[status]
   const Icon = view.Icon
   const LiveIndicator = status === "live" ? CircleDot : Icon

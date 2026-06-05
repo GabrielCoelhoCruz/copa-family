@@ -1,15 +1,8 @@
 import { z } from 'zod'
 
-import { AVATAR_OPTIONS } from '@/lib/avatars'
-
-const avatarKeys = AVATAR_OPTIONS.map((avatar) => avatar.key) as [
-  string,
-  ...string[],
-]
-
 export const createRoomSchema = z.object({
   displayName: z.string().trim().min(2, 'Nome muito curto').max(40),
-  avatarKey: z.enum(avatarKeys),
+  avatarPlayerId: z.string().uuid('Escolha um jogador'),
   roomName: z.string().trim().min(2, 'Nome da sala muito curto').max(50),
   fixtureId: z.union([z.string().uuid('Escolha um jogo da Copa'), z.literal('')]).optional(),
 })
@@ -21,7 +14,7 @@ export const joinRoomSchema = z.object({
     .toUpperCase()
     .regex(/^[A-Z0-9]{6}$/, 'Use exatamente 6 letras ou números, sem espaços.'),
   displayName: z.string().trim().min(2, 'Nome muito curto').max(40),
-  avatarKey: z.enum(avatarKeys),
+  avatarPlayerId: z.string().uuid('Escolha um jogador'),
 })
 
 export const predictionSchema = z.object({
@@ -47,8 +40,13 @@ export const copaPareSchema = z.object({
   matchId: z.string().uuid(),
   roomId: z.string().uuid(),
   roomCode: z.string().min(1),
-  category: z.enum(['player', 'team', 'coach', 'stadium']),
   answer: z.string().trim().min(2, 'Resposta muito curta').max(80),
+})
+
+export const reshuffleCopaPareLetterSchema = z.object({
+  matchId: z.string().uuid(),
+  roomId: z.string().uuid(),
+  roomCode: z.string().min(1),
 })
 
 export const quickReactionSchema = z.object({

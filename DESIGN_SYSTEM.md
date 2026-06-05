@@ -2,9 +2,11 @@
 
 Documentação humana do design system. Para agentes e ferramentas (Impeccable, Cursor, CI), use **`PRODUCT.md`** + **`DESIGN.md`**. Fluxo: [Impeccable — Start](https://impeccable.style/designing/#start).
 
+**No app:** rota [`/design-system`](http://localhost:3000/design-system) (espelha o HTML *Copa Family - Design System*). Tokens CSS em `src/styles/copa-theme.css`; constantes TS em `src/lib/copa-theme/`. O layout raiz usa `data-theme="stadium"` (Variação C · Estádio).
+
 ## Direção
 
-O Copa Family usa a direção visual **Copa festiva**: energia de torcida, cores vivas e clima social, com estrutura limpa para não atrapalhar palpites, lobby e ranking.
+O produto adota a **Variação C — Estádio** (verde & ouro, fundo escuro, Archivo + DM Mono). A documentação abaixo ainda descreve tokens shadcn de domínio; no código eles são mapeados para o tema escuro em `html[data-theme="stadium"]`.
 
 O produto deve parecer um jogo de Copa para família e amigos, não um dashboard esportivo. A interface é mobile-first e prioriza o fluxo mínimo: criar sala, convidar pessoas, fazer palpites, acompanhar o intervalo e ver o ranking.
 
@@ -18,7 +20,7 @@ O produto deve parecer um jogo de Copa para família e amigos, não um dashboard
 
 ## Tokens
 
-Os tokens vivem em `src/app/globals.css`.
+Tokens Estádio (`--cf-*`) em `src/styles/copa-theme.css`. Overrides shadcn e aliases `--home-*` em `src/app/globals.css` (`html[data-theme="stadium"]`).
 
 ### Base shadcn
 
@@ -46,9 +48,8 @@ Os tokens vivem em `src/app/globals.css`.
 
 ## Tipografia
 
-- Heading: `Bricolage Grotesque`.
-- Corpo: `Nunito Sans`.
-- Mono: `Geist Mono`, usado em códigos de sala e valores tabulares.
+- Display e corpo: **Archivo** (`--font-archivo`).
+- Mono (código da sala): **DM Mono** (`--font-dm-mono`).
 
 Use `font-heading` para títulos, placares, rankings e chamadas fortes. Use `font-mono` apenas para códigos, IDs e números que precisam alinhar visualmente.
 

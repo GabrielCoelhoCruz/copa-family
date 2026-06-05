@@ -181,36 +181,9 @@ export async function getFixtureByIdRaw(
   return data as DbFootballFixture | null
 }
 
-export type FixtureDateGroup = {
-  dateKey: string
-  label: string
-  fixtures: CatalogFixtureView[]
-}
-
-export function groupFixturesByKickoffDate(
-  fixtures: CatalogFixtureView[]
-): FixtureDateGroup[] {
-  const groups = new Map<string, CatalogFixtureView[]>()
-
-  for (const fixture of fixtures) {
-    const dateKey = fixture.kickoff_at
-      ? fixture.kickoff_at.slice(0, 10)
-      : 'sem-data'
-    const list = groups.get(dateKey) ?? []
-    list.push(fixture)
-    groups.set(dateKey, list)
-  }
-
-  return [...groups.entries()].map(([dateKey, groupFixtures]) => ({
-    dateKey,
-    label:
-      dateKey === 'sem-data'
-        ? 'Data a confirmar'
-        : new Date(`${dateKey}T12:00:00`).toLocaleDateString('pt-BR', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-          }),
-    fixtures: groupFixtures,
-  }))
-}
+export type { FixtureDateGroup } from '@/features/fixtures/calendar-groups'
+export {
+  getFixtureDateSectionId,
+  groupFixturesByKickoffDate,
+  pickCalendarFocusDateKey,
+} from '@/features/fixtures/calendar-groups'

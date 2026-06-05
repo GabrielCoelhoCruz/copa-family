@@ -20,17 +20,17 @@ function FlowPage({
 }: FlowPageProps) {
   return (
     <FlowLayout>
-      <PageTopBar href={backHref} label={backLabel} />
-      <header className="space-y-1">
-        <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
-          {title}
-        </h1>
-        {description ? (
-          <p className="text-pretty text-sm leading-relaxed text-muted-foreground">
-            {description}
-          </p>
-        ) : null}
-      </header>
+      <div className="flex items-center gap-3 px-0.5 pb-4 pt-1.5">
+        <PageTopBar href={backHref} label={backLabel} />
+        <div className="min-w-0">
+          <h1 className="truncate font-heading text-[22px] font-extrabold leading-tight text-white">
+            {title}
+          </h1>
+          {description ? (
+            <p className="mt-0.5 text-[13px] text-[var(--cf-muted)]">{description}</p>
+          ) : null}
+        </div>
+      </div>
       {children}
     </FlowLayout>
   )

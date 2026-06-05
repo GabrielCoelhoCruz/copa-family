@@ -62,11 +62,12 @@ Não parecer:
 
 | Decisão | Escolha |
 | --- | --- |
-| Login | Convidado: nome + avatar |
+| Login | Convidado: nome + retrato de jogador da Copa (24 curados, foto no Storage) |
 | Partida | Controle manual do anfitrião |
 | Calendário Copa (catálogo Supabase) | Sim — vitrine em `/calendario`; sync em `/admin/catalogo` ou API admin; app lê só Supabase |
 | Criar sala a partir de um jogo | Sim — `/criar-sala?fixture=<id>` desde o calendário |
 | Placar ao vivo automático | Fora do MVP — anfitrião controla status e resultado |
+| Atualização da sala para convidados | Sim — badge, pill Copa Stop e banner in-app via Realtime + fallback (sem push) |
 | Cadastro obrigatório | Não |
 | Comentários no feed | Não na V1 |
 | Limite de fotos | 5 por usuário por partida |
@@ -106,11 +107,12 @@ Evitar cards de “funcionalidades” (Salas, Medalhas, Família) no topo; prefe
 
 - `room_created`, `room_joined`, `prediction_submitted`
 - `match_started`, `halftime_started`, `match_finished`
+- `room_live_status_changed`, `room_live_fallback_poll`, `room_live_channel_error`
 - `ranking_viewed`, retorno no próximo jogo
 
 ## Fora do escopo (agora)
 
-Chat, vídeo, push, IA narradora, prêmios reais, placar ao vivo automático (sync de status/placar em tempo real).
+Chat, vídeo, push, IA narradora, prêmios reais, placar ao vivo automático via API externa (o host ainda controla status; convidados recebem mudanças in-app em tempo quase real).
 
 ## Impeccable loop (como usar neste repo)
 

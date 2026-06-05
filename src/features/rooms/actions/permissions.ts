@@ -1,4 +1,5 @@
 import { ANALYTICS_EVENTS, trackEvent } from '@/lib/analytics'
+import type { AdminSupabaseClient } from '@/lib/supabase/service-client'
 import type { RoomMemberRole } from '@/lib/types'
 
 export type ActionMembership = {
@@ -20,6 +21,21 @@ export function isRoomMember(role: RoomMemberRole | null): boolean {
 
 export function canControlRoom(role: RoomMemberRole | null): boolean {
   return role === 'owner' || role === 'co_host'
+}
+
+export async function fetchRoomMemberRole(
+  supabase: AdminSupabaseClient,
+  roomId: string,
+  userId: string | null
+): Promise<RoomMemberRole | null> {
+  const { data, error } = await supabase
+    .from('room_members')
+    .select('user_id, role')
+    .eq('room_id', roomId)
+
+  if (error) throw error
+
+  return roomMembershipRole((data ?? []) as ActionMembership[], userId)
 }
 
 export async function trackPermissionDenied(input: {

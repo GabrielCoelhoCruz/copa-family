@@ -11,6 +11,7 @@ export type DbUser = {
   id: string
   display_name: string
   avatar_key: string
+  avatar_player_id: string | null
 }
 
 export type DbRoom = {
@@ -82,6 +83,9 @@ export type DbMatch = {
   away_score: number | null
   winner: string | null
   player_of_match: string | null
+  copa_pare_category: string | null
+  copa_pare_letter: string | null
+  halftime_started_at: string | null
 }
 
 export type DbRoomMember = {

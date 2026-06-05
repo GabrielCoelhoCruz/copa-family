@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Crown, Target, User, Users } from 'lucide-react'
+import { Circle, Target, Trophy, User } from 'lucide-react'
 
 import { routes } from '@/lib/routes'
 import { cn } from '@/lib/utils'
@@ -11,15 +11,13 @@ const NAV_ITEMS = [
   {
     key: 'jogo',
     label: 'Jogo',
-    shortLabel: 'Jogo',
     href: (code: string) => routes.sala(code),
-    Icon: Users,
+    Icon: Circle,
     isActive: (code: string, path: string) => path === routes.sala(code),
   },
   {
     key: 'palpites',
-    label: 'Palpites',
-    shortLabel: 'Palpite',
+    label: 'Palpite',
     href: (code: string) => routes.palpites(code),
     Icon: Target,
     isActive: (_code: string, path: string) => path.includes('/palpites'),
@@ -27,15 +25,13 @@ const NAV_ITEMS = [
   {
     key: 'ranking',
     label: 'Ranking',
-    shortLabel: 'Ranking',
     href: (code: string) => routes.ranking(code),
-    Icon: Crown,
+    Icon: Trophy,
     isActive: (_code: string, path: string) => path.includes('/ranking'),
   },
   {
     key: 'perfil',
     label: 'Perfil',
-    shortLabel: 'Perfil',
     href: (code: string) => routes.perfil(code),
     Icon: User,
     isActive: (_code: string, path: string) => path.includes('/perfil'),
@@ -51,10 +47,10 @@ function RoomTabNav({ roomCode }: RoomTabNavProps) {
 
   return (
     <nav
-      className="border-t border-border/80 bg-card/95 backdrop-blur-md"
+      className="border-t border-[var(--cf-card-border-soft)] bg-[var(--home-chrome-solid)] backdrop-blur-md"
       aria-label="Navegação da sala"
     >
-      <div className="grid grid-cols-4 gap-1 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
+      <div className="grid grid-cols-4 gap-0 px-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-2">
         {NAV_ITEMS.map((item) => {
           const href = item.href(roomCode)
           const isActive = item.isActive(roomCode, pathname)
@@ -66,15 +62,24 @@ function RoomTabNav({ roomCode }: RoomTabNavProps) {
               href={href}
               aria-current={isActive ? 'page' : undefined}
               aria-label={item.label}
-              className={cn(
-                'relative flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-center text-xs font-semibold transition-[background-color,color,opacity] duration-[var(--duration-fast)]',
-                isActive
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground active:bg-muted/80'
-              )}
+              className="flex flex-col items-center gap-1 border-0 bg-transparent px-0 py-1.5"
             >
-              <Icon className="size-5" aria-hidden />
-              <span>{item.shortLabel}</span>
+              <Icon
+                className={cn(
+                  'size-[23px]',
+                  isActive ? 'text-[var(--cf-gold)]' : 'text-[var(--cf-faint)]'
+                )}
+                strokeWidth={isActive ? 2.4 : 2}
+                aria-hidden
+              />
+              <span
+                className={cn(
+                  'font-heading text-[11px]',
+                  isActive ? 'font-extrabold text-[var(--cf-gold)]' : 'font-semibold text-[var(--cf-faint)]'
+                )}
+              >
+                {item.label}
+              </span>
             </Link>
           )
         })}

@@ -7,7 +7,10 @@ export {
   updateMatchStatusAction,
   updateMatchStatusFormAction,
 } from '@/features/rooms/actions/match-lifecycle'
-export { submitCopaPareAction } from '@/features/rooms/actions/copa-pare'
+export {
+  submitCopaPareAction,
+  reshuffleCopaPareLetterFormAction,
+} from '@/features/rooms/actions/copa-pare'
 export {
   assumeRoomHostAction,
   createNextMatchAction,

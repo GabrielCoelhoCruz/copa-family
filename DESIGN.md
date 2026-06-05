@@ -24,11 +24,13 @@
 
 | Role | Family | Usage |
 | --- | --- | --- |
-| Display / headings | Bricolage Grotesque | Títulos, placar, timer, ranking |
-| Body | Nunito Sans | UI copy, labels, listas |
-| Mono | Geist Mono | Código de sala, tracking largo |
+| Display / headings | Archivo | Títulos, placar, timer, ranking |
+| Body | Archivo | UI copy, labels, listas |
+| Mono | DM Mono | Código de sala, tracking largo |
 
 Classes: `font-heading`, `font-sans`, `font-mono`.
+
+Prototype parity checklist: [`PROTOTYPE-PARITY.md`](./PROTOTYPE-PARITY.md).
 
 ## Color tokens
 
@@ -85,6 +87,14 @@ Definidos em `:root` e `.dark` em `src/app/globals.css`. Use Tailwind theme alia
 | `cf-timer-urgent` | Últimos 10s do Copa Pare |
 | `cf-rank-gold-glow` | Destaque do 1º no ranking |
 
+### Sala ao vivo (`RoomLiveBanner`)
+
+- Banner contextual acima da `RoomTabNav`, mesma faixa do `CopaPareEventPill`.
+- Dispara só em **transição de fase** (não no primeiro paint).
+- Com pill Copa Stop visível: título **compacto** (`compactTitle`); descrição longa omitida para não duplicar copy.
+- CTA primário no banner; dismiss (X) + auto-hide ~8s; `prefers-reduced-motion` desliga animação de entrada.
+- Header: `StadiumStatusBadge` com `aria-label` “Status da partida: …”; indicador “Reconectando…” só se Realtime falhar.
+
 ### Visual Copa (sem bandeira literal)
 
 - `CopaAmbient` — gramado, arco de gol, bola, brilho troféu (`src/components/patterns/copa-ambient.tsx`)
@@ -131,7 +141,7 @@ Definidos em `:root` e `.dark` em `src/app/globals.css`. Use Tailwind theme alia
 | --- | --- | --- |
 | `/` | Done | Landing — `Button`, `Badge` |
 | `/calendario` | Done | `FixtureRow`, optional API-Sports league widget |
-| `/criar-sala` | Done | `CreateRoomForm` + `FixturePicker` + avatar picker |
+| `/criar-sala` | Done | `CreateRoomForm` + `FixturePicker` + `PlayerAvatarPicker` |
 | `/entrar` | Done | `JoinRoomForm` + `RoomCodeInput` (`?code=` prefill) |
 | `/sala/[roomCode]` | Done | Game board — `RoomMatchHero`, participantes, convite, `HostGameControl` |
 | `/sala/[roomCode]/perfil` | Done | Pontos, breakdown, medalhas |
@@ -195,6 +205,8 @@ Keep **Copa festiva** tokens; do not add coins, ELO, or opponent-vs-you framing 
 - **2026-06-02:** Production readiness social/ops — `ShareScoreCard`, `QuickReactionBar`, Copa Pare halftime-first, métricas de host completion/retorno
 - **2026-06-02:** Calendário Copa (`/calendario`), `FixturePicker` / `FixtureRow`, widgets API-Sports opcionais
 - **2026-06-02:** Vitrine do catálogo — `WorldCupSummaryStrip`, cards com bandeiras e CTA `Criar sala`; `/admin/catalogo` (status + sync server-only); hero da sala com `TeamVersusStrip`; `/criar-sala?fixture=<uuid>`
+- **2026-06-02:** Avatares com retratos — `PlayerAvatarPicker` + modal (foto grande, nome completo); cutout no sync; Storage `player-portraits`
+- **2026-06-02:** `FixturePicker` — jogos de hoje inline + modal com select de dia, fase e grupo (`preferUpcoming` no fluxo host)
 - **2026-05-31:** QR Code no convite (`RoomQrPanel` expansível); Playwright E2E mobile 390×844
 - **2026-05-31:** Impeccable adapt/layout/onboard — bottom sala nav, sticky form CTAs, onboarding na home, inputs 44px
 - **2026-05-31:** Polish Impeccable — copy pt-BR, a11y (nav, badges, forms), harden nomes longos, CTAs 44px, erros de servidor

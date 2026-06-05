@@ -4,6 +4,7 @@ import { CreateRoomForm } from '@/components/create-room-form'
 import { FlowPage } from '@/components/layouts/flow-page'
 import { fixtureDisplayTitle } from '@/features/fixtures/format'
 import { getFixtureById, getWorldCupCatalogFixtures } from '@/features/fixtures/queries'
+import { getSelectablePlayers } from '@/features/players/queries'
 import { routes } from '@/lib/routes'
 
 type CriarSalaPageProps = {
@@ -52,7 +53,10 @@ export async function generateMetadata({
 
 export default async function CriarSalaPage({ searchParams }: CriarSalaPageProps) {
   const { fixture: fixtureParam } = await searchParams
-  const fixtures = await getWorldCupCatalogFixtures()
+  const [fixtures, players] = await Promise.all([
+    getWorldCupCatalogFixtures(),
+    getSelectablePlayers(),
+  ])
   const defaultFixtureId =
     fixtureParam && fixtures.some((f) => f.id === fixtureParam)
       ? fixtureParam
@@ -62,13 +66,13 @@ export default async function CriarSalaPage({ searchParams }: CriarSalaPageProps
     <FlowPage
       backHref={routes.calendario}
       title="Criar sala"
-      description={
-        defaultFixtureId
-          ? 'Jogo pré-selecionado do calendário. Confirme o nome da sala e crie.'
-          : 'Em menos de um minuto você cria a sala e manda o link no grupo.'
-      }
+      description="Monte a disputa da família"
     >
-      <CreateRoomForm fixtures={fixtures} defaultFixtureId={defaultFixtureId} />
+      <CreateRoomForm
+        fixtures={fixtures}
+        players={players}
+        defaultFixtureId={defaultFixtureId}
+      />
     </FlowPage>
   )
 }

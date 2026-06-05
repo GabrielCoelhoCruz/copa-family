@@ -1,16 +1,27 @@
 'use client'
 
-import { TeamBadge } from '@/components/patterns/team-badge'
-import { formatFixtureKickoff, fixtureDisplayTitle } from '@/features/fixtures/format'
-import type { CatalogFixtureView } from '@/features/fixtures/catalog-view'
-import { cn } from '@/lib/utils'
+import { useMemo, useState } from 'react'
 
+import { FixturePickerModal } from '@/components/patterns/fixture-picker-modal'
+import { FixturePickerOption } from '@/components/patterns/fixture-picker-option'
+import { TeamVersusStrip } from '@/components/patterns/team-versus-strip'
+import { Button } from '@/components/ui/button'
+import type { CatalogFixtureView } from '@/features/fixtures/catalog-view'
+import { formatFixtureKickoff, formatFixtureMeta } from '@/features/fixtures/format'
+import {
+  findFixtureById,
+  getFixturesForDateKey,
+  getTodayDateKeyForPicker,
+  sortFixturesByKickoff,
+} from '@/features/fixtures/fixture-picker-utils'
 type FixturePickerProps = {
   fixtures: CatalogFixtureView[]
   name?: string
   defaultValue?: string
   errorMessage?: string
   describedBy?: string
+  /** Host "próximo jogo": default browse day favors upcoming kickoffs. */
+  preferUpcoming?: boolean
 }
 
 function FixturePicker({
@@ -19,7 +30,29 @@ function FixturePicker({
   defaultValue,
   errorMessage,
   describedBy,
+  preferUpcoming = false,
 }: FixturePickerProps) {
+  const todayKey = getTodayDateKeyForPicker()
+  const [selectedId, setSelectedId] = useState<string | null>(defaultValue ?? null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalSession, setModalSession] = useState(0)
+
+  function openFixtureModal() {
+    setModalSession((value) => value + 1)
+    setModalOpen(true)
+  }
+
+  const todayFixtures = useMemo(
+    () => sortFixturesByKickoff(getFixturesForDateKey(fixtures, todayKey)),
+    [fixtures, todayKey]
+  )
+
+  const selectedFixture = findFixtureById(fixtures, selectedId ?? undefined)
+  const selectedOnToday =
+    selectedFixture != null &&
+    todayFixtures.some((fixture) => fixture.id === selectedFixture.id)
+  const showSelectedCard = selectedFixture != null && !selectedOnToday
+
   if (fixtures.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-border bg-muted/30 px-3 py-3 text-sm text-muted-foreground">
@@ -30,71 +63,87 @@ function FixturePicker({
   }
 
   return (
-    <fieldset className="space-y-2">
+    <fieldset className="space-y-3">
       <legend className="sr-only">Escolha o jogo da Copa</legend>
-      <div
-        className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-border/80 p-2"
-        role="radiogroup"
-        aria-invalid={errorMessage ? true : undefined}
-        aria-describedby={describedBy}
-      >
-        {fixtures.map((fixture) => {
-          const kickoff = formatFixtureKickoff(fixture.kickoff_at)
-          const meta = [fixture.group_name, fixture.round, fixture.stage]
-            .filter(Boolean)
-            .join(' · ')
-          const id = `fixture-${fixture.id}`
-          const isSelected = defaultValue === fixture.id
+      <input type="hidden" name={name} value={selectedId ?? ''} />
 
-          return (
-            <label
-              key={fixture.id}
-              htmlFor={id}
-              className={cn(
-                'flex cursor-pointer gap-3 rounded-lg border px-3 py-2.5 transition-colors',
-                'hover:bg-brand-sky/10 has-[:checked]:border-brand-field/40 has-[:checked]:bg-brand-field/10',
-                isSelected && 'border-brand-field/50 bg-brand-field/15 ring-1 ring-brand-field/30'
-              )}
+      {showSelectedCard && selectedFixture ? (
+        <div className="rounded-xl border border-brand-field/40 bg-brand-field/10 px-3 py-3">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Jogo selecionado
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 shrink-0 px-2 text-xs"
+              onClick={openFixtureModal}
             >
-              <input
-                type="radio"
-                id={id}
-                name={name}
-                value={fixture.id}
-                defaultChecked={isSelected}
-                className="mt-2 size-4 shrink-0 accent-[var(--brand-field)]"
-                required
+              Trocar
+            </Button>
+          </div>
+          <div className="mt-2">
+            <TeamVersusStrip fixture={selectedFixture} size="sm" />
+          </div>
+          {formatFixtureKickoff(selectedFixture.kickoff_at) ? (
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              {formatFixtureKickoff(selectedFixture.kickoff_at)}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Hoje
+        </p>
+        {todayFixtures.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-border bg-muted/30 px-3 py-3 text-sm text-muted-foreground">
+            Nenhum jogo hoje. Escolha outro dia no calendário da Copa.
+          </p>
+        ) : (
+          <div
+            className="space-y-2"
+            role="radiogroup"
+            aria-label="Jogos de hoje"
+            aria-invalid={errorMessage ? true : undefined}
+            aria-describedby={describedBy}
+          >
+            {todayFixtures.map((fixture) => (
+              <FixturePickerOption
+                key={fixture.id}
+                fixture={fixture}
+                inputId={`fixture-today-${fixture.id}`}
+                checked={selectedId === fixture.id}
+                onSelect={setSelectedId}
+                meta={formatFixtureMeta(fixture)}
               />
-              <span className="flex min-w-0 flex-1 items-center gap-3">
-                <span className="flex shrink-0 flex-col items-center gap-1">
-                  <TeamBadge
-                    name={fixture.home_team_name}
-                    badgeUrl={fixture.home_team_badge_url ?? fixture.home_team_logo}
-                    size="sm"
-                  />
-                  <TeamBadge
-                    name={fixture.away_team_name}
-                    badgeUrl={fixture.away_team_badge_url ?? fixture.away_team_logo}
-                    size="sm"
-                  />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-semibold text-foreground">
-                    {fixtureDisplayTitle(fixture)}
-                  </span>
-                  {kickoff ? (
-                    <span className="block text-xs text-muted-foreground">{kickoff}</span>
-                  ) : null}
-                  {meta ? (
-                    <span className="block text-xs text-muted-foreground">{meta}</span>
-                  ) : null}
-                </span>
-              </span>
-            </label>
-          )
-        })}
+            ))}
+          </div>
+        )}
       </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full min-h-11"
+        onClick={openFixtureModal}
+      >
+        {todayFixtures.length === 0 ? 'Escolher outro dia' : 'Ver todos os jogos'}
+      </Button>
+
       <FieldErrorInline message={errorMessage} />
+
+      <FixturePickerModal
+        key={modalSession}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        fixtures={fixtures}
+        selectedId={selectedId}
+        onSelect={setSelectedId}
+        preferUpcoming={preferUpcoming}
+      />
     </fieldset>
   )
 }

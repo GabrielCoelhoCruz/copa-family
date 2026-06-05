@@ -1,5 +1,33 @@
 import type { DbFootballFixture } from '@/lib/types'
 
+export const FIXTURE_CALENDAR_TIME_ZONE = 'America/Sao_Paulo'
+
+export function formatDateKeyInTimeZone(
+  date: Date,
+  timeZone = FIXTURE_CALENDAR_TIME_ZONE
+): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
+}
+
+export function getFixtureKickoffDateKey(
+  kickoffAt: string,
+  timeZone = FIXTURE_CALENDAR_TIME_ZONE
+): string {
+  return formatDateKeyInTimeZone(new Date(kickoffAt), timeZone)
+}
+
+export function getTodayDateKey(
+  timeZone = FIXTURE_CALENDAR_TIME_ZONE,
+  now = new Date()
+): string {
+  return formatDateKeyInTimeZone(now, timeZone)
+}
+
 export function formatFixtureKickoff(
   kickoffAt: string | null,
   timeZone = 'America/Sao_Paulo'

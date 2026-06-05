@@ -17,6 +17,8 @@
     "test:watch": "vitest",
     "sync:catalog": "node scripts/sync-world-cup-catalog.mjs",
     "enrich:flags": "npx tsx scripts/run-enrich-flags.ts",
+    "seed:players": "npx tsx scripts/run-seed-players.ts",
+    "sync:players": "npx tsx scripts/run-sync-player-portraits.ts",
     "test:e2e": "playwright test",
     "test:e2e:ci": "cross-env CI=true playwright test",
     "test:e2e:ui": "playwright test --ui",

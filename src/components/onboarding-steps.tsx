@@ -4,7 +4,7 @@ const STEPS = [
   {
     icon: Users,
     title: 'Crie ou entre',
-    description: 'Nome e avatar. Sem senha.',
+    description: 'Nome e jogador da Copa. Sem senha.',
   },
   {
     icon: Target,

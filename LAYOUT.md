@@ -51,6 +51,11 @@ npm run design:install:all   # Impeccable + frontend-design into .cursor/skills
 - **frontend-design:** distinctive UI, anti-template — use with `PRODUCT.md` (Copa festiva, not generic SaaS)
 - **taste-skill:** landing/marketing only — `TASTE-SKILL-AUDIT.md`
 
+## Prototype parity (Variação C)
+
+Room chrome matches [`copa-family.html`](../copa-family.html): compact header (code + QR), gold tab bar, glass cards (`StadiumCard`), flow back button (44px circle). See [`PROTOTYPE-PARITY.md`](./PROTOTYPE-PARITY.md).
+
 ## Changelog
 
+- **2026-06-04:** Prototype UX parity — stadium patterns, room shell, screen restyles
 - **2026-03-31:** Initial layout system (`SiteShell`, `FlowPage`, `PageStack`, `PageSection`)

@@ -9,6 +9,7 @@ type RoundResultCardProps = {
   title: string
   description?: string
   points?: number
+  pointsHint?: string
   primaryHref: string
   primaryLabel: string
   secondaryHref?: string
@@ -21,6 +22,7 @@ function RoundResultCard({
   title,
   description,
   points,
+  pointsHint,
   primaryHref,
   primaryLabel,
   secondaryHref,
@@ -48,8 +50,11 @@ function RoundResultCard({
         ) : null}
       </div>
       {points != null ? (
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-1">
           <PointsDelta value={points} label="pts" celebrate={points >= 50} />
+          {pointsHint ? (
+            <p className="text-xs font-semibold text-muted-foreground">{pointsHint}</p>
+          ) : null}
         </div>
       ) : null}
       <div className="flex flex-col gap-2">

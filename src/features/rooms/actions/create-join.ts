@@ -23,7 +23,7 @@ export async function createRoomAction(
   const rawFixtureId = formData.get('fixtureId')
   const parsed = createRoomSchema.safeParse({
     displayName: formData.get('displayName'),
-    avatarKey: formData.get('avatarKey'),
+    avatarPlayerId: formData.get('avatarPlayerId'),
     roomName: formData.get('roomName'),
     fixtureId: typeof rawFixtureId === 'string' ? rawFixtureId : '',
   })
@@ -47,7 +47,7 @@ export async function createRoomAction(
   try {
     userId = await createGuestUser(
       parsed.data.displayName,
-      parsed.data.avatarKey
+      parsed.data.avatarPlayerId
     )
   } catch {
     return { error: 'Não foi possível salvar seu perfil. Verifique a conexão e tente de novo.' }
@@ -165,7 +165,7 @@ export async function joinRoomAction(
   const parsed = joinRoomSchema.safeParse({
     roomCode: formData.get('roomCode'),
     displayName: formData.get('displayName'),
-    avatarKey: formData.get('avatarKey'),
+    avatarPlayerId: formData.get('avatarPlayerId'),
   })
 
   if (!parsed.success) {
@@ -205,7 +205,7 @@ export async function joinRoomAction(
   try {
     userId = await createGuestUser(
       parsed.data.displayName,
-      parsed.data.avatarKey
+      parsed.data.avatarPlayerId
     )
   } catch {
     return { error: 'Não foi possível salvar seu perfil. Verifique a conexão e tente de novo.' }

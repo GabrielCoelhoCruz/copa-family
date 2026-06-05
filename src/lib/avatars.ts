@@ -1,3 +1,4 @@
+/** @deprecated Legacy emoji avatars — new users use football_players portraits. */
 export const AVATAR_OPTIONS = [
   { key: 'lion', emoji: '🦁', label: 'Leão' },
   { key: 'eagle', emoji: '🦅', label: 'Águia' },
@@ -11,12 +12,9 @@ export const AVATAR_OPTIONS = [
 
 export type AvatarKey = (typeof AVATAR_OPTIONS)[number]['key']
 
-export function getAvatarEmoji(avatarKey: string) {
-  return AVATAR_OPTIONS.find((avatar) => avatar.key === avatarKey)?.emoji ?? '⚽'
-}
-
-export function getAvatarFallback(avatarKey: string, displayName: string) {
-  const emoji = getAvatarEmoji(avatarKey)
-  if (emoji !== '⚽') return emoji
-  return displayName.slice(0, 2).toUpperCase()
+/** Initials-only fallback for legacy users without a player portrait. */
+export function getAvatarFallback(_avatarKey: string, displayName: string): string {
+  const trimmed = displayName.trim()
+  if (trimmed.length >= 2) return trimmed.slice(0, 2).toUpperCase()
+  return trimmed.slice(0, 1).toUpperCase() || '?'
 }

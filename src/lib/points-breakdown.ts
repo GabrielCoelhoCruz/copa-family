@@ -7,6 +7,7 @@ export type PointsSource =
   | 'match_player_correct'
   | 'match_exact_score'
   | 'copa_pare_participation'
+  | 'copa_pare_unique'
 
 export type PointsBreakdownRow = {
   source: PointsSource
@@ -22,6 +23,7 @@ const POINTS_SOURCE_ORDER: PointsSource[] = [
   'match_player_correct',
   'match_exact_score',
   'copa_pare_participation',
+  'copa_pare_unique',
 ]
 
 const SOURCE_META: Record<PointsSource, { label: string; unitAmount: number }> = {
@@ -42,8 +44,12 @@ const SOURCE_META: Record<PointsSource, { label: string; unitAmount: number }> =
     unitAmount: POINTS.exactScore,
   },
   copa_pare_participation: {
-    label: 'Copa Pare',
+    label: 'Copa Stop',
     unitAmount: POINTS.copaPareParticipation,
+  },
+  copa_pare_unique: {
+    label: 'Resposta única',
+    unitAmount: POINTS.copaPareUnique,
   },
 }
 

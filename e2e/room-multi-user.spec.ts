@@ -105,7 +105,7 @@ test.describe('multiusuário', () => {
 
       await goToCopaPare(guestPage, roomCode!)
       await submitCopaPareAnswer(guestPage, 'Neymar')
-      await expect(guestPage.getByText('Você entrou no Copa Pare!')).toBeVisible({
+      await expect(guestPage.getByText('Você entrou no Copa Stop!')).toBeVisible({
         timeout: 20_000,
       })
 

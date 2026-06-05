@@ -1,7 +1,6 @@
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 
-import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 type PageTopBarProps = {
@@ -14,14 +13,13 @@ function PageTopBar({ href, label = 'Voltar', className }: PageTopBarProps) {
   return (
     <Link
       href={href}
+      aria-label={label}
       className={cn(
-        buttonVariants({ variant: 'ghost', size: 'sm' }),
-        'cf-pressable w-fit -ml-1',
+        'cf-pressable flex size-11 shrink-0 items-center justify-center rounded-full border border-[var(--cf-card-border)] bg-[var(--cf-glass)]',
         className
       )}
     >
-      <ArrowLeft aria-hidden />
-      {label}
+      <ChevronLeft className="size-[22px] text-[var(--cf-gold)]" aria-hidden />
     </Link>
   )
 }
