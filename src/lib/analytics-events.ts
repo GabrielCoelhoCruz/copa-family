@@ -18,6 +18,12 @@ export const ANALYTICS_EVENTS = {
   roomLiveStatusChanged: 'room_live_status_changed',
   roomLiveFallbackPoll: 'room_live_fallback_poll',
   roomLiveChannelError: 'room_live_channel_error',
+  // Funnel tracking
+  landingViewed: 'landing_viewed',
+  landingCreateRoomClicked: 'landing_create_room_clicked',
+  landingJoinClicked: 'landing_join_clicked',
+  roomInviteViewed: 'room_invite_viewed',
+  predictionDeadlineViewed: 'prediction_deadline_viewed',
 } as const
 
 export type AnalyticsEventName =

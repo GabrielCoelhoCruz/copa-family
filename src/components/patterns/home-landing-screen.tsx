@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import {
@@ -17,6 +20,8 @@ import { LandingGlassCard } from '@/components/patterns/landing-glass-card'
 import { LandingPitchPreview } from '@/components/patterns/landing-pitch-preview'
 import { PwaInstallBanner } from '@/components/pwa-install-banner'
 import { buttonVariants } from '@/components/ui/button'
+import { ANALYTICS_EVENTS } from '@/lib/analytics-events'
+import { trackClientEvent } from '@/lib/analytics-client'
 import { routes } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 
@@ -96,6 +101,10 @@ function DemoAvatar({
 }
 
 function HomeLandingScreen() {
+  useEffect(() => {
+    void trackClientEvent({ eventName: ANALYTICS_EVENTS.landingViewed })
+  }, [])
+
   return (
     <div
       className={cn(
@@ -296,6 +305,9 @@ function HomeLandingScreen() {
           <div className="space-y-2.5">
             <Link
               href={routes.criarSala}
+              onClick={() => {
+                void trackClientEvent({ eventName: ANALYTICS_EVENTS.landingCreateRoomClicked })
+              }}
               className={cn(
                 buttonVariants({ size: 'lg' }),
                 'cf-pressable home-cta-gold flex h-14 w-full items-center justify-center gap-[9px] rounded-[32px] border-0 text-[17px] font-bold tracking-[0.2px]'
@@ -307,6 +319,9 @@ function HomeLandingScreen() {
             <div className="h-2.5" aria-hidden />
             <Link
               href={routes.entrar}
+              onClick={() => {
+                void trackClientEvent({ eventName: ANALYTICS_EVENTS.landingJoinClicked })
+              }}
               className={cn(
                 buttonVariants({ variant: 'outline', size: 'lg' }),
                 'cf-pressable home-cta-ghost flex min-h-14 w-full items-center justify-center gap-[9px] rounded-[32px] text-[17px] font-bold tracking-[0.2px]'

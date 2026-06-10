@@ -100,12 +100,21 @@ export default async function SalaGameBoardPage({
     })
   }
 
+  const showInvite = shouldShowInviteProminent(match.status, isOwner)
+
+  if (showInvite) {
+    await trackEvent({
+      eventName: ANALYTICS_EVENTS.roomInviteViewed,
+      roomId: room.id,
+      matchId: match.id,
+      userId: userId ?? undefined,
+    })
+  }
+
   const showResultForm =
     isHost &&
     match.status !== 'lobby' &&
     match.status !== 'predictions_open'
-
-  const showInvite = shouldShowInviteProminent(match.status, isOwner)
 
   return (
     <>
