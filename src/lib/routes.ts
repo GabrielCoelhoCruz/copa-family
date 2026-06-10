@@ -13,6 +13,7 @@ export const routes = {
   ranking: (roomCode: string) => `/sala/${roomCode}/ranking`,
   copaPare: (roomCode: string) => `/sala/${roomCode}/copa-pare`,
   perfil: (roomCode: string) => `/sala/${roomCode}/perfil`,
+  privacidade: '/privacidade',
   adminMetricas: '/admin/metricas',
   adminCatalogo: '/admin/catalogo',
   criarSalaComFixture: (fixtureId: string) =>
