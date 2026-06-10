@@ -339,13 +339,6 @@ function HomeLandingScreen() {
               >
                 Privacidade
               </Link>
-              {' · '}
-              <Link
-                href={routes.designSystem}
-                className="text-[var(--home-muted)] underline-offset-2 hover:text-[var(--home-gold)] hover:underline"
-              >
-                Design system
-              </Link>
             </p>
           </div>
         </footer>
