@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, DM_Mono } from "next/font/google";
 import "./globals.css";
+import { registerServiceWorker } from "@/lib/register-sw";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -47,6 +48,11 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col pb-[env(safe-area-inset-bottom)]">
         {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(${registerServiceWorker.toString()})()`,
+          }}
+        />
       </body>
     </html>
   );
