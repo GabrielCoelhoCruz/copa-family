@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
+import { RoomErrorBoundary } from '@/components/patterns/room-error-boundary'
 import { RoomShellLive } from '@/components/room-shell-live'
 import { RoomLiveProvider } from '@/features/rooms/live/room-live-provider'
 import { fixtureDisplayTitle } from '@/features/fixtures/format'
@@ -76,7 +77,9 @@ export default async function SalaLayout({ children, params }: SalaLayoutProps) 
       initialShowCopaPareEvent={showCopaPareEvent}
     >
       <RoomShellLive roomCode={context.room.code} roomName={context.room.name}>
-        {children}
+        <RoomErrorBoundary roomCode={context.room.code}>
+          {children}
+        </RoomErrorBoundary>
       </RoomShellLive>
     </RoomLiveProvider>
   )
